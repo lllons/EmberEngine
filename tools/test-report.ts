@@ -40,6 +40,13 @@ export interface SuiteResult {
   detail: string[];
 }
 
+const ANSI = /\x1b\[[0-9;]*m/g;
+
+/** Deno test colourises its summary; strip escapes before matching. */
+export function stripAnsi(text: string): string {
+  return text.replace(ANSI, "");
+}
+
 /**
  * Parses the runner's summary line, e.g.
  *   ok | 123 passed | 2 failed (1s)
@@ -47,7 +54,7 @@ export interface SuiteResult {
  * Returns null when the output contains no summary (the suite died before reporting).
  */
 export function parseSummary(output: string): { passed: number; failed: number; ignored: number } | null {
-  const matches = [...output.matchAll(
+  const matches = [...stripAnsi(output).matchAll(
     /(?<status>ok|FAILED)\s*\|\s*(?<passed>\d+)\s+passed\s*\|\s*(?<failed>\d+)\s+failed(?:\s*\|\s*(?<ignored>\d+)\s+ignored)?/g,
   )];
   const last = matches.at(-1);
@@ -79,7 +86,7 @@ export async function runSuite(suite: Suite): Promise<SuiteResult> {
     stderr: "piped",
   });
   const { code, stdout, stderr } = await command.output();
-  const text = new TextDecoder().decode(stdout) + new TextDecoder().decode(stderr);
+  const text = stripAnsi(new TextDecoder().decode(stdout) + new TextDecoder().decode(stderr));
   const seconds = (performance.now() - started) / 1000;
   const summary = parseSummary(text);
   const detail = text.split(/\r?\n/).filter((line) => line.startsWith("error") || line.includes("=>"))
