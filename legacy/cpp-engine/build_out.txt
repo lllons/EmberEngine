@@ -1,0 +1,113 @@
+In file included from Engine/Rendering/Shader.cpp:3:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/string:40,
+                 from ./Engine/Rendering/Shader.h:3,
+                 from Engine/Rendering/Shader.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from Engine/Rendering/Renderer.cpp:12:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/cmath:46,
+                 from ./Engine/Math/Math.h:3,
+                 from ./Engine/Rendering/Renderer.h:3,
+                 from Engine/Rendering/Renderer.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from Engine/Rendering/Mesh.cpp:3:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/cmath:46,
+                 from ./Engine/Math/Math.h:3,
+                 from ./Engine/Rendering/Mesh.h:3,
+                 from Engine/Rendering/Mesh.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from Engine/Rendering/Texture.cpp:3:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/string:40,
+                 from ./Engine/Rendering/Texture.h:3,
+                 from Engine/Rendering/Texture.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from Engine/Rendering/FrameBuffer.cpp:3:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/cstdint:40,
+                 from ./Engine/Rendering/FrameBuffer.h:3,
+                 from Engine/Rendering/FrameBuffer.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from Engine/Core/Application.cpp:9:
+./Engine/Platform/Platform.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/string:40,
+                 from ./Engine/Core/Application.h:3,
+                 from Engine/Core/Application.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from Engine/Platform/Platform.cpp:1:
+./Engine/Platform/Platform.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/string:40,
+                 from ./Engine/Platform/Platform.h:3:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from ./GUI/EmberGUI.h:4,
+                 from GUI/EmberGUI.cpp:1:
+./Engine/Platform/Platform.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/cmath:46,
+                 from ./Engine/Math/Math.h:3,
+                 from ./GUI/EmberGUI.h:3:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from ./GUI/EmberGUI.h:4,
+                 from Editor/Editor.cpp:10:
+./Engine/Platform/Platform.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/string:40,
+                 from ./Engine/Core/Application.h:3,
+                 from ./Engine/Engine.h:15,
+                 from ./Editor/Editor.h:3,
+                 from Editor/Editor.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+collect2.exe: error: ld returned 5 exit status

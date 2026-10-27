@@ -1,0 +1,216 @@
+{
+  "format": "emberscene",
+  "version": 1,
+  "name": "title",
+  "resources": {
+    "gravity": {
+      "x": 0,
+      "y": 0
+    },
+    "background": "#080a10",
+    "viewport": {
+      "width": 960,
+      "height": 540
+    },
+    "camera": {
+      "position": {
+        "x": 480,
+        "y": 270
+      },
+      "zoom": 1,
+      "smoothing": 0,
+      "bounds": null,
+      "follow": null
+    },
+    "camera3d": {
+      "position": {
+        "x": 0,
+        "y": 140,
+        "z": 620
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "up": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      },
+      "fov": 1.0471975511965976,
+      "near": 0.5,
+      "far": 8000
+    }
+  },
+  "entities": [
+    {
+      "id": 1,
+      "components": {
+        "Name": {
+          "value": "backdrop"
+        },
+        "RectShape": {
+          "width": 620,
+          "height": 320,
+          "color": "#121a2b",
+          "layer": -10,
+          "filled": true,
+          "strokeWidth": 1,
+          "alpha": 1
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 150
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "components": {
+        "Name": {
+          "value": "title"
+        },
+        "TextLabel": {
+          "text": "EMBER RUNNER",
+          "size": 54,
+          "color": "#ff7a2f",
+          "align": "center",
+          "baseline": "middle",
+          "layer": 20,
+          "alpha": 1
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 170
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "components": {
+        "Name": {
+          "value": "subtitle"
+        },
+        "TextLabel": {
+          "text": "a tiny 2D platformer built with EmberEngine",
+          "size": 18,
+          "color": "#8b93a7",
+          "align": "center",
+          "baseline": "middle",
+          "layer": 20,
+          "alpha": 1
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 230
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "components": {
+        "Name": {
+          "value": "howto"
+        },
+        "TextLabel": {
+          "text": "collect the embers · reach the gate · avoid the spikes",
+          "size": 20,
+          "color": "#ffc857",
+          "align": "center",
+          "baseline": "middle",
+          "layer": 20,
+          "alpha": 1
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 320
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "components": {
+        "Name": {
+          "value": "start"
+        },
+        "TextLabel": {
+          "text": "press ENTER (or click) to run",
+          "size": 22,
+          "color": "#ffffff",
+          "align": "center",
+          "baseline": "middle",
+          "layer": 20,
+          "alpha": 1
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 400
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "components": {
+        "Name": {
+          "value": "start-trigger"
+        },
+        "Script": {
+          "name": "runner.title",
+          "props": {
+            "target": "level-1"
+          }
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 400
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "title": "Ember Runner"
+  }
+}

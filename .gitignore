@@ -1,0 +1,17 @@
+# Build output (generated, never hand-edited)
+build/
+dist/
+*.exe
+
+# Compiled C++ artifacts (legacy/cpp-engine)
+*.o
+*.a
+
+# Freebuff local agent state (databases, project metadata)
+.freebuff/
+
+# Deno
+.deno/
+
+# Logs
+*.log

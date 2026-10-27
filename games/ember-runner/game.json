@@ -1,0 +1,9 @@
+{
+  "id": "ember-runner",
+  "title": "Ember Runner",
+  "version": "0.1.0",
+  "entry": "src/main.ts",
+  "scenes": "scenes",
+  "start": "level-1",
+  "viewport": { "width": 960, "height": 540 }
+}

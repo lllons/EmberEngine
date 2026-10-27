@@ -1,0 +1,480 @@
+In file included from Engine/Core/Application.cpp:1:
+./Engine/Core/Application.h: In member function 'virtual void Ember::Application::onUpdate(float)':
+./Engine/Core/Application.h:45:33: warning: unused parameter 'deltaTime' [-Wunused-parameter]
+   45 |     virtual void onUpdate(float deltaTime) {}
+      |                           ~~~~~~^~~~~~~~~
+./Engine/Core/Application.h: In member function 'virtual void Ember::Application::onEvent(Ember::Event&)':
+./Engine/Core/Application.h:48:39: warning: unused parameter 'event' [-Wunused-parameter]
+   48 |     virtual void onEvent(class Event& event) {}
+      |                          ~~~~~~~~~~~~~^~~~~
+In file included from Engine/Rendering/Renderer.cpp:12:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/cmath:46,
+                 from ./Engine/Math/Math.h:3,
+                 from ./Engine/Rendering/Renderer.h:3,
+                 from Engine/Rendering/Renderer.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+Engine/Rendering/Renderer.cpp: In member function 'void Ember::Renderer::renderScene(Ember::Scene&, Ember::Camera&)':
+Engine/Rendering/Renderer.cpp:125:16: warning: variable 'vp' set but not used [-Wunused-but-set-variable=]
+  125 |     Math::Mat4 vp = projection * view;
+      |                ^~
+In file included from Engine/Rendering/Shader.cpp:3:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/string:40,
+                 from ./Engine/Rendering/Shader.h:3,
+                 from Engine/Rendering/Shader.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from Engine/Rendering/Mesh.cpp:3:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/cmath:46,
+                 from ./Engine/Math/Math.h:3,
+                 from ./Engine/Rendering/Mesh.h:3,
+                 from Engine/Rendering/Mesh.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+In file included from Engine/Rendering/Material.cpp:1:
+In member function 'Ember::MaterialProperty& Ember::MaterialProperty::operator=(Ember::MaterialProperty&&)',
+    inlined from 'void Ember::Material::setVec2(const std::string&, const Ember::Math::Vec2&)' at Engine/Rendering/Material.cpp:22:119:
+./Engine/Rendering/Material.h:18:8: warning: '<anonymous>.Ember::MaterialProperty::<anonymous>' is used uninitialized [-Wuninitialized]
+   18 | struct MaterialProperty {
+      |        ^~~~~~~~~~~~~~~~
+Engine/Rendering/Material.cpp: In member function 'void Ember::Material::setVec2(const std::string&, const Ember::Math::Vec2&)':
+Engine/Rendering/Material.cpp:22:119: note: '<anonymous>' declared here
+   22 | void Material::setVec2(const std::string& name, const Math::Vec2& value) { m_properties[name] = MaterialProperty(value); m_dirty = true; }
+      |                                                                                                                       ^
+In member function 'Ember::MaterialProperty& Ember::MaterialProperty::operator=(Ember::MaterialProperty&&)',
+    inlined from 'void Ember::Material::setVec3(const std::string&, const Ember::Math::Vec3&)' at Engine/Rendering/Material.cpp:23:119:
+./Engine/Rendering/Material.h:18:8: warning: '<anonymous>.Ember::MaterialProperty::<anonymous>' is used uninitialized [-Wuninitialized]
+   18 | struct MaterialProperty {
+      |        ^~~~~~~~~~~~~~~~
+Engine/Rendering/Material.cpp: In member function 'void Ember::Material::setVec3(const std::string&, const Ember::Math::Vec3&)':
+Engine/Rendering/Material.cpp:23:119: note: '<anonymous>' declared here
+   23 | void Material::setVec3(const std::string& name, const Math::Vec3& value) { m_properties[name] = MaterialProperty(value); m_dirty = true; }
+      |                                                                                                                       ^
+In member function 'Ember::MaterialProperty& Ember::MaterialProperty::operator=(Ember::MaterialProperty&&)',
+    inlined from 'void Ember::Material::setVec4(const std::string&, const Ember::Math::Vec4&)' at Engine/Rendering/Material.cpp:24:119:
+./Engine/Rendering/Material.h:18:8: warning: '<anonymous>.Ember::MaterialProperty::<anonymous>' is used uninitialized [-Wuninitialized]
+   18 | struct MaterialProperty {
+      |        ^~~~~~~~~~~~~~~~
+Engine/Rendering/Material.cpp: In member function 'void Ember::Material::setVec4(const std::string&, const Ember::Math::Vec4&)':
+Engine/Rendering/Material.cpp:24:119: note: '<anonymous>' declared here
+   24 | void Material::setVec4(const std::string& name, const Math::Vec4& value) { m_properties[name] = MaterialProperty(value); m_dirty = true; }
+      |                                                                                                                       ^
+In member function 'Ember::MaterialProperty& Ember::MaterialProperty::operator=(Ember::MaterialProperty&&)',
+    inlined from 'void Ember::Material::setTexture(const std::string&, const std::shared_ptr<Ember::Texture>&)' at Engine/Rendering/Material.cpp:25:140:
+./Engine/Rendering/Material.h:18:8: warning: '<anonymous>.Ember::MaterialProperty::<anonymous>' may be used uninitialized [-Wmaybe-uninitialized]
+   18 | struct MaterialProperty {
+      |        ^~~~~~~~~~~~~~~~
+Engine/Rendering/Material.cpp: In member function 'void Ember::Material::setTexture(const std::string&, const std::shared_ptr<Ember::Texture>&)':
+Engine/Rendering/Material.cpp:25:140: note: '<anonymous>' declared here
+   25 | void Material::setTexture(const std::string& name, const std::shared_ptr<Texture>& texture) { m_properties[name] = MaterialProperty(texture); m_dirty = true; }
+      |                                                                                                                                            ^
+In file included from Engine/Rendering/Texture.cpp:3:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/string:40,
+                 from ./Engine/Rendering/Texture.h:3,
+                 from Engine/Rendering/Texture.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+Engine/Rendering/Texture.cpp: In member function 'bool Ember::Texture::loadCubeMap(std::string, std::string, std::string, std::string, std::string, std::string)':
+Engine/Rendering/Texture.cpp:82:45: warning: unused parameter 'right' [-Wunused-parameter]
+   82 | bool Texture::loadCubeMap(const std::string right, const std::string left, const std::string top, const std::string bottom, const std::string front, const std::string back) {
+      |                           ~~~~~~~~~~~~~~~~~~^~~~~
+Engine/Rendering/Texture.cpp:82:70: warning: unused parameter 'left' [-Wunused-parameter]
+   82 | bool Texture::loadCubeMap(const std::string right, const std::string left, const std::string top, const std::string bottom, const std::string front, const std::string back) {
+      |                                                    ~~~~~~~~~~~~~~~~~~^~~~
+Engine/Rendering/Texture.cpp:82:94: warning: unused parameter 'top' [-Wunused-parameter]
+   82 | bool Texture::loadCubeMap(const std::string right, const std::string left, const std::string top, const std::string bottom, const std::string front, const std::string back) {
+      |                                                                            ~~~~~~~~~~~~~~~~~~^~~
+Engine/Rendering/Texture.cpp:82:117: warning: unused parameter 'bottom' [-Wunused-parameter]
+   82 | bool Texture::loadCubeMap(const std::string right, const std::string left, const std::string top, const std::string bottom, const std::string front, const std::string back) {
+      |                                                                                                   ~~~~~~~~~~~~~~~~~~^~~~~~
+Engine/Rendering/Texture.cpp:82:143: warning: unused parameter 'front' [-Wunused-parameter]
+   82 | bool Texture::loadCubeMap(const std::string right, const std::string left, const std::string top, const std::string bottom, const std::string front, const std::string back) {
+      |                                                                                                                             ~~~~~~~~~~~~~~~~~~^~~~~
+Engine/Rendering/Texture.cpp:82:168: warning: unused parameter 'back' [-Wunused-parameter]
+   82 | bool Texture::loadCubeMap(const std::string right, const std::string left, const std::string top, const std::string bottom, const std::string front, const std::string back) {
+      |                                                                                                                                                      ~~~~~~~~~~~~~~~~~~^~~~
+Engine/Rendering/Texture.cpp: In member function 'bool Ember::Texture::loadCubeMapFromDir(const std::string&)':
+Engine/Rendering/Texture.cpp:87:53: warning: unused parameter 'directory' [-Wunused-parameter]
+   87 | bool Texture::loadCubeMapFromDir(const std::string& directory) {
+      |                                  ~~~~~~~~~~~~~~~~~~~^~~~~~~~~
+In file included from Engine/Rendering/FrameBuffer.cpp:3:
+./Engine/Rendering/GL.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/cstdint:40,
+                 from ./Engine/Rendering/FrameBuffer.h:3,
+                 from Engine/Rendering/FrameBuffer.cpp:1:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, unsigned int*); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:66:59:   required from here
+   66 |     glGenFramebuffers = loadFunc<PFNGLGENFRAMEBUFFERSPROC>(opengl32, "glGenFramebuffers");
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, unsigned int*)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, unsigned int*)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, const unsigned int*); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:67:65:   required from here
+   67 |     glDeleteFramebuffers = loadFunc<PFNGLDELETEFRAMEBUFFERSPROC>(opengl32, "glDeleteFramebuffers");
+      |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, const unsigned int*)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, const unsigned int*)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(unsigned int, unsigned int); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:68:59:   required from here
+   68 |     glBindFramebuffer = loadFunc<PFNGLBINDFRAMEBUFFERPROC>(opengl32, "glBindFramebuffer");
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(unsigned int, unsigned int, unsigned int, unsigned int, int); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:69:69:   required from here
+   69 |     glFramebufferTexture2D = loadFunc<PFNGLFRAMEBUFFERTEXTURE2DPROC>(opengl32, "glFramebufferTexture2D");
+      |                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int, unsigned int, unsigned int, int)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int, unsigned int, unsigned int, int)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(unsigned int, unsigned int, unsigned int, unsigned int); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:70:75:   required from here
+   70 |     glFramebufferRenderbuffer = loadFunc<PFNGLFRAMEBUFFERRENDERBUFFERPROC>(opengl32, "glFramebufferRenderbuffer");
+      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int, unsigned int, unsigned int)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int, unsigned int, unsigned int)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = unsigned int (*)(unsigned int); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:71:73:   required from here
+   71 |     glCheckFramebufferStatus = loadFunc<PFNGLCHECKFRAMEBUFFERSTATUSPROC>(opengl32, "glCheckFramebufferStatus");
+      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'unsigned int (*)(unsigned int)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'unsigned int (*)(unsigned int)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, int, int, int, int, int, int, int, unsigned int, unsigned int); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:72:59:   required from here
+   72 |     glBlitFramebuffer = loadFunc<PFNGLBLITFRAMEBUFFERPROC>(opengl32, "glBlitFramebuffer");
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, int, int, int, int, int, int, int, unsigned int, unsigned int)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, int, int, int, int, int, int, int, unsigned int, unsigned int)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(unsigned int, unsigned int, int, int); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:76:67:   required from here
+   76 |     glRenderbufferStorage = loadFunc<PFNGLRENDERBUFFERSTORAGEPROC>(opengl32, "glRenderbufferStorage");
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int, int, int)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int, int, int)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(unsigned int); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:81:59:   required from here
+   81 |     glBindVertexArray = loadFunc<PFNGLBINDVERTEXARRAYPROC>(opengl32, "glBindVertexArray");
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(unsigned int, int, const char* const*, const int*); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:86:53:   required from here
+   86 |     glShaderSource = loadFunc<PFNGLSHADERSOURCEPROC>(opengl32, "glShaderSource");
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, int, const char* const*, const int*)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, int, const char* const*, const int*)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(unsigned int, unsigned int, int*); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:88:51:   required from here
+   88 |     glGetShaderiv = loadFunc<PFNGLGETSHADERIVPROC>(opengl32, "glGetShaderiv");
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int, int*)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, unsigned int, int*)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(unsigned int, int, int*, char*); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:89:61:   required from here
+   89 |     glGetShaderInfoLog = loadFunc<PFNGLGETSHADERINFOLOGPROC>(opengl32, "glGetShaderInfoLog");
+      |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, int, int*, char*)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(unsigned int, int, int*, char*)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = unsigned int (*)(); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:90:55:   required from here
+   90 |     glCreateProgram = loadFunc<PFNGLCREATEPROGRAMPROC>(opengl32, "glCreateProgram");
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'unsigned int (*)()' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'unsigned int (*)()' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = int (*)(unsigned int, const char*); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:99:65:   required from here
+   99 |     glGetUniformLocation = loadFunc<PFNGLGETUNIFORMLOCATIONPROC>(opengl32, "glGetUniformLocation");
+      |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'int (*)(unsigned int, const char*)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'int (*)(unsigned int, const char*)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, int); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:100:47:   required from here
+  100 |     glUniform1i = loadFunc<PFNGLUNIFORM1IPROC>(opengl32, "glUniform1i");
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, int)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, int)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, float); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:101:47:   required from here
+  101 |     glUniform1f = loadFunc<PFNGLUNIFORM1FPROC>(opengl32, "glUniform1f");
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, float)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, float)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, float, float); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:102:47:   required from here
+  102 |     glUniform2f = loadFunc<PFNGLUNIFORM2FPROC>(opengl32, "glUniform2f");
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, float, float)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, float, float)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, float, float, float); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:103:47:   required from here
+  103 |     glUniform3f = loadFunc<PFNGLUNIFORM3FPROC>(opengl32, "glUniform3f");
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, float, float, float)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, float, float, float)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, float, float, float, float); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:104:47:   required from here
+  104 |     glUniform4f = loadFunc<PFNGLUNIFORM4FPROC>(opengl32, "glUniform4f");
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, float, float, float, float)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, float, float, float, float)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp: In instantiation of 'T loadFunc(HMODULE, const char*) [with T = void (*)(int, int, unsigned char, const float*); HMODULE = HINSTANCE__*]':
+Engine/Rendering/GL.cpp:105:61:   required from here
+  105 |     glUniformMatrix3fv = loadFunc<PFNGLUNIFORMMATRIX3FVPROC>(opengl32, "glUniformMatrix3fv");
+      |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:53:14: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'void (*)(int, int, unsigned char, const float*)' [-Wcast-function-type]
+   53 |     T func = (T)wglGetProcAddress(name);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Rendering/GL.cpp:54:23: warning: cast between incompatible function types from 'FARPROC' {aka 'long long int (*)()'} to 'void (*)(int, int, unsigned char, const float*)' [-Wcast-function-type]
+   54 |     if (!func) func = (T)GetProcAddress(lib, name);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from Engine/Platform/Platform.cpp:1:
+./Engine/Platform/Platform.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/string:40,
+                 from ./Engine/Platform/Platform.h:3:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+Engine/Platform/Platform.cpp: In member function 'bool Ember::Platform::createOpenGLContext()':
+Engine/Platform/Platform.cpp:148:9: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'PFNWGLCREATECONTEXTATTRIBSARBPROC' {aka 'HGLRC__* (*)(HDC__*, HGLRC__*, const int*)'} [-Wcast-function-type]
+  148 |         (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Engine/Platform/Platform.cpp: In member function 'void Ember::Platform::setVSync(bool)':
+Engine/Platform/Platform.cpp:345:9: warning: cast between incompatible function types from 'PROC' {aka 'long long int (*)()'} to 'PFNWGLSWAPINTERVALEXTPROC' {aka 'int (*)(int)'} [-Wcast-function-type]
+  345 |         (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from ./GUI/EmberGUI.h:4,
+                 from GUI/EmberGUI.cpp:1:
+./Engine/Platform/Platform.h:9:13: warning: 'NOMINMAX' redefined
+    9 |     #define NOMINMAX
+      |             ^~~~~~~~
+In file included from C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/c++config.h:733,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/bits/requires_hosted.h:31,
+                 from C:/msys64/ucrt64/include/c++/16.1.0/cmath:46,
+                 from ./Engine/Math/Math.h:3,
+                 from ./GUI/EmberGUI.h:3:
+C:/msys64/ucrt64/include/c++/16.1.0/x86_64-w64-mingw32/bits/os_defines.h:45:9: note: this is the location of the previous definition
+   45 | #define NOMINMAX 1
+      |         ^~~~~~~~
+GUI/EmberGUI.cpp: In member function 'void Ember::EmberGUI::newFrame(float)':
+GUI/EmberGUI.cpp:30:54: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+   30 |     platform.getMousePosition((int&)m_state.mousePos.x, (int&)m_state.mousePos.y);
+      |                                     ~~~~~~~~~~~~~~~~~^
+GUI/EmberGUI.cpp:30:80: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+   30 |     platform.getMousePosition((int&)m_state.mousePos.x, (int&)m_state.mousePos.y);
+      |                                                               ~~~~~~~~~~~~~~~~~^
+GUI/EmberGUI.cpp: In member function 'void Ember::EmberGUI::drawTriangle(const Ember::Math::Vec2&, const Ember::Math::Vec2&, const Ember::Math::Vec2&, const Ember::Math::Vec4&)':
+GUI/EmberGUI.cpp:123:91: warning: unused parameter 'p3' [-Wunused-parameter]
+  123 | void EmberGUI::drawTriangle(const Math::Vec2& p1, const Math::Vec2& p2, const Math::Vec2& p3, const Math::Vec4& color) {
+      |                                                                         ~~~~~~~~~~~~~~~~~~^~
+GUI/EmberGUI.cpp: In member function 'Ember::Math::Vec2 Ember::EmberGUI::calculateItemSize(const std::string&, float)':
+GUI/EmberGUI.cpp:195:59: warning: unused parameter 'label' [-Wunused-parameter]
+  195 | Math::Vec2 EmberGUI::calculateItemSize(const std::string& label, float width) {
+      |                                        ~~~~~~~~~~~~~~~~~~~^~~~~
+GUI/EmberGUI.cpp: In member function 'void Ember::EmberGUI::textWrapped(const std::string&, float)':
+GUI/EmberGUI.cpp:214:56: warning: unused parameter 'wrapWidth' [-Wunused-parameter]
+  214 | void EmberGUI::textWrapped(const std::string& t, float wrapWidth) {
+      |                                                  ~~~~~~^~~~~~~~~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::smallButton(const std::string&)':
+GUI/EmberGUI.cpp:248:11: warning: unused variable 'id' [-Wunused-variable]
+  248 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::invisibleButton(const std::string&, const Ember::Math::Vec2&)':
+GUI/EmberGUI.cpp:264:51: warning: unused parameter 'idStr' [-Wunused-parameter]
+  264 | bool EmberGUI::invisibleButton(const std::string& idStr, const Math::Vec2& size) {
+      |                                ~~~~~~~~~~~~~~~~~~~^~~~~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::arrowButton(const std::string&, bool, float)':
+GUI/EmberGUI.cpp:275:11: warning: unused variable 'id' [-Wunused-variable]
+  275 |     GUIID id = getItemID(idStr);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::checkbox(const std::string&, bool&)':
+GUI/EmberGUI.cpp:302:11: warning: unused variable 'id' [-Wunused-variable]
+  302 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::sliderFloat(const std::string&, float&, float, float, const char*)':
+GUI/EmberGUI.cpp:330:11: warning: unused variable 'id' [-Wunused-variable]
+  330 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::inputColor3(const std::string&, float*)':
+GUI/EmberGUI.cpp:530:11: warning: unused variable 'id' [-Wunused-variable]
+  530 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::combo(const std::string&, int&, const char*, float)':
+GUI/EmberGUI.cpp:552:11: warning: unused variable 'id' [-Wunused-variable]
+  552 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::treeNodeEx(const std::string&, bool, bool)':
+GUI/EmberGUI.cpp:606:11: warning: unused variable 'id' [-Wunused-variable]
+  606 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp:605:69: warning: unused parameter 'defaultOpen' [-Wunused-parameter]
+  605 | bool EmberGUI::treeNodeEx(const std::string& label, bool leaf, bool defaultOpen) {
+      |                                                                ~~~~~^~~~~~~~~~~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::treeNodeExHeader(const std::string&, bool&, bool)':
+GUI/EmberGUI.cpp:640:65: warning: unused parameter 'visible' [-Wunused-parameter]
+  640 | bool EmberGUI::treeNodeExHeader(const std::string& label, bool& visible, bool defaultOpen) {
+      |                                                           ~~~~~~^~~~~~~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::collapsingHeader(const std::string&, bool)':
+GUI/EmberGUI.cpp:647:11: warning: unused variable 'id' [-Wunused-variable]
+  647 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp:646:64: warning: unused parameter 'defaultOpen' [-Wunused-parameter]
+  646 | bool EmberGUI::collapsingHeader(const std::string& label, bool defaultOpen) {
+      |                                                           ~~~~~^~~~~~~~~~~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::selectable(const std::string&, bool, const Ember::Math::Vec2&)':
+GUI/EmberGUI.cpp:673:11: warning: unused variable 'id' [-Wunused-variable]
+  673 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::beginMenu(const std::string&, bool)':
+GUI/EmberGUI.cpp:730:11: warning: unused variable 'id' [-Wunused-variable]
+  730 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::menuItem(const std::string&, bool, bool)':
+GUI/EmberGUI.cpp:749:11: warning: unused variable 'id' [-Wunused-variable]
+  749 |     GUIID id = getItemID(label);
+      |           ^~
+GUI/EmberGUI.cpp: In member function 'int Ember::EmberGUI::tabBar(const std::string&, const std::vector<std::__cxx11::basic_string<char> >&, int&)':
+GUI/EmberGUI.cpp:766:41: warning: unused parameter 'id' [-Wunused-parameter]
+  766 | int EmberGUI::tabBar(const std::string& id, const std::vector<std::string>& tabs, int& selected) {
+      |                      ~~~~~~~~~~~~~~~~~~~^~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::beginScrollArea(Ember::PanelState&, const Ember::Math::Vec2&)':
+GUI/EmberGUI.cpp:836:44: warning: unused parameter 'state' [-Wunused-parameter]
+  836 | bool EmberGUI::beginScrollArea(PanelState& state, const Math::Vec2& size) {
+      |                                ~~~~~~~~~~~~^~~~~
+GUI/EmberGUI.cpp:836:69: warning: unused parameter 'size' [-Wunused-parameter]
+  836 | bool EmberGUI::beginScrollArea(PanelState& state, const Math::Vec2& size) {
+      |                                                   ~~~~~~~~~~~~~~~~~~^~~~
+GUI/EmberGUI.cpp: In member function 'bool Ember::EmberGUI::imageButton(const std::string&, uint32_t, const Ember::Math::Vec2&, const Ember::Math::Vec4&)':
+GUI/EmberGUI.cpp:847:47: warning: unused parameter 'id' [-Wunused-parameter]
+  847 | bool EmberGUI::imageButton(const std::string& id, uint32_t textureID, const Math::Vec2& size, const Math::Vec4& tint) {
+      |                            ~~~~~~~~~~~~~~~~~~~^~
+In file included from ./Engine/Engine.h:15,
+                 from ./Editor/Editor.h:3,
+                 from Editor/Editor.cpp:1:
+./Engine/Core/Application.h: In member function 'virtual void Ember::Application::onUpdate(float)':
+./Engine/Core/Application.h:45:33: warning: unused parameter 'deltaTime' [-Wunused-parameter]
+   45 |     virtual void onUpdate(float deltaTime) {}
+      |                           ~~~~~~^~~~~~~~~
+./Engine/Core/Application.h: In member function 'virtual void Ember::Application::onEvent(Ember::Event&)':
+./Engine/Core/Application.h:48:39: warning: unused parameter 'event' [-Wunused-parameter]
+   48 |     virtual void onEvent(class Event& event) {}
+      |                          ~~~~~~~~~~~~~^~~~~
+In file included from Engine/Engine.h:15,
+                 from main.cpp:1:
+Engine/Core/Application.h: In member function 'virtual void Ember::Application::onUpdate(float)':
+Engine/Core/Application.h:45:33: warning: unused parameter 'deltaTime' [-Wunused-parameter]
+   45 |     virtual void onUpdate(float deltaTime) {}
+      |                           ~~~~~~^~~~~~~~~
+Engine/Core/Application.h: In member function 'virtual void Ember::Application::onEvent(Ember::Event&)':
+Engine/Core/Application.h:48:39: warning: unused parameter 'event' [-Wunused-parameter]
+   48 |     virtual void onEvent(class Event& event) {}
+      |                          ~~~~~~~~~~~~~^~~~~
+collect2.exe: error: ld returned 5 exit status
