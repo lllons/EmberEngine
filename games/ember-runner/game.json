@@ -4,6 +4,6 @@
   "version": "0.1.0",
   "entry": "src/main.ts",
   "scenes": "scenes",
-  "start": "level-1",
+  "start": "title",
   "viewport": { "width": 960, "height": 540 }
 }

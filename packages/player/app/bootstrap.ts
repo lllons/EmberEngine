@@ -64,6 +64,9 @@ export async function startBrowserGame(options: BootstrapOptions): Promise<Boots
     },
   });
 
+  // The exported page ships a "loading…" placeholder; the shell now covers it, so drop it.
+  (globalThis as unknown as { document?: Document }).document?.getElementById("boot")?.remove();
+
   window.addEventListener("resize", () => mounted.resize());
   (window as unknown as { emberPlayer?: unknown }).emberPlayer = {
     mounted,
@@ -82,7 +85,8 @@ export async function startBrowserGame(options: BootstrapOptions): Promise<Boots
 }
 
 interface Shell {
-  root: HTMLDivElement;
+  /** The caller may supply any element to mount into, so this is not a `HTMLDivElement`. */
+  root: HTMLElement;
   stage: HTMLDivElement;
   title: HTMLSpanElement;
   status: HTMLSpanElement;
