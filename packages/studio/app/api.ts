@@ -53,7 +53,11 @@ export interface ExportSummary {
 
 export interface ExportResponse {
   export: ExportSummary;
-  verification: { ok: boolean; checks: Array<{ name: string; ok: boolean; detail: string }> } | null;
+  verification:
+    | { ok: boolean; checks: Array<{ name: string; ok: boolean; detail: string }> }
+    | null;
+  /** Final path when the editor was asked where to install the game, else null. */
+  installed: string | null;
 }
 
 export interface ScenePayload {
@@ -75,7 +79,9 @@ export class StudioApi {
     if (!response.ok) {
       const message = (data as { error?: string }).error ?? `HTTP ${response.status}`;
       const problems = (data as { problems?: string[] }).problems;
-      throw new Error(problems && problems.length > 0 ? `${message}: ${problems.join(", ")}` : message);
+      throw new Error(
+        problems && problems.length > 0 ? `${message}: ${problems.join(", ")}` : message,
+      );
     }
     return data as T;
   }
@@ -88,11 +94,17 @@ export class StudioApi {
     return this.request<ScenePayload>("GET", `/api/scenes/${encodeURIComponent(name)}`);
   }
 
-  saveScene(name: string, scene: SerializedScene): Promise<{ ok: boolean; path: string; entities: number }> {
+  saveScene(
+    name: string,
+    scene: SerializedScene,
+  ): Promise<{ ok: boolean; path: string; entities: number }> {
     return this.request("PUT", `/api/scenes/${encodeURIComponent(name)}`, { scene });
   }
 
-  createScene(name: string, template: string): Promise<{ ok: boolean; name: string; scene: SerializedScene }> {
+  createScene(
+    name: string,
+    template: string,
+  ): Promise<{ ok: boolean; name: string; scene: SerializedScene }> {
     return this.request("POST", "/api/scenes", { name, template });
   }
 
@@ -108,8 +120,8 @@ export class StudioApi {
     return this.request<SimulateResult>("POST", "/api/simulate", { scene, seconds, keys });
   }
 
-  exportGame(verify = true): Promise<ExportResponse> {
-    return this.request<ExportResponse>("POST", "/api/export", { verify });
+  exportGame(verify = true, destination?: string): Promise<ExportResponse> {
+    return this.request<ExportResponse>("POST", "/api/export", { verify, destination });
   }
 
   logs(): Promise<{ logs: string[] }> {

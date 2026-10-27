@@ -9,7 +9,8 @@
  *   ember play [game] [--headless s]   run the game (browser player or headless run)
  *   ember editor [game]                open the native editor window for a game
  *   ember studio [game]                open the browser studio editor for a game
- *   ember export [game] [--verify]     build dist/<game>.exe and optionally run it
+ *   ember export [game] [--out dir|file] [--verify]
+ *                                      build the .exe, optionally install it elsewhere
  *   ember test [game] [--seconds n]    headless play-through of every scene
  *
  * This file only parses arguments, prints and returns exit codes; the work is done by the
@@ -17,15 +18,15 @@
  */
 
 import { sceneToJson } from "@ember/core";
-import { exportGame, verifyExport } from "@ember/packager";
+import { exportGame, placeExportedGame, resolveExportTarget, verifyExport } from "@ember/packager";
 import { bundleFromJSON, headlessPlay, openInBrowser, startPlayerServer } from "@ember/player";
 import {
   absolutePath,
   type GameDescriptor,
   listGameSceneFiles,
+  type LoadedGame,
   loadGame,
   loadGameDescriptor,
-  type LoadedGame,
   writeScene,
 } from "@ember/gameloader";
 
@@ -54,6 +55,7 @@ export function usage(): string {
     "  --port <n>      port for the editor server",
     "  --no-open       do not open a browser",
     "  --headless <s>  simulate <s> seconds without a display",
+    "  --out <path>    folder or .exe path to install the exported game into",
     "  --verify        run the exported executable after building it",
     "  --json          machine-readable output",
     "  --help          this message",
@@ -68,6 +70,8 @@ export interface CliOptions {
   open: boolean;
   headless: number | null;
   verify: boolean;
+  /** Folder or `.exe` path the exported game is installed into (null keeps dist/). */
+  out: string | null;
   json: boolean;
   write: boolean;
   seconds: number;
@@ -92,6 +96,7 @@ export function parseCliArgs(args: readonly string[]): CliOptions {
     open: true,
     headless: null,
     verify: false,
+    out: null,
     json: false,
     write: false,
     seconds: 2,
@@ -129,6 +134,10 @@ export function parseCliArgs(args: readonly string[]): CliOptions {
         options.seconds = seconds;
         break;
       }
+      case "--out":
+        options.out = rest[++i] ?? null;
+        if (options.out === null) throw new Error("--out expects a folder or file path");
+        break;
       case "--verify":
         options.verify = true;
         break;
@@ -165,7 +174,12 @@ export async function commandInfo(options: CliOptions, log = console.log): Promi
   if (options.json) {
     log(
       JSON.stringify(
-        { ...described, folder: loaded.descriptor.directory, sceneSource: loaded.sceneSource, warnings: loaded.warnings },
+        {
+          ...described,
+          folder: loaded.descriptor.directory,
+          sceneSource: loaded.sceneSource,
+          warnings: loaded.warnings,
+        },
         null,
         2,
       ),
@@ -174,7 +188,11 @@ export async function commandInfo(options: CliOptions, log = console.log): Promi
   }
   log(`${described.title} v${described.version} (${described.id})`);
   log(`folder:  ${loaded.descriptor.directory}`);
-  log(`scenes:  ${described.scenes.length} from ${loaded.sceneSource} — ${described.scenes.join(", ")}`);
+  log(
+    `scenes:  ${described.scenes.length} from ${loaded.sceneSource} — ${
+      described.scenes.join(", ")
+    }`,
+  );
   log(`start:   ${described.start}`);
   log(`systems: ${described.systems.join(", ")}`);
   log(`scripts: ${described.scripts.join(", ")}`);
@@ -196,13 +214,24 @@ export async function commandScenes(options: CliOptions, log = console.log): Pro
       written.push(await writeScene(descriptor, name, scene));
       bytes += sceneToJson(scene).length;
     }
-    log(`wrote ${written.length} scene file(s) to ${descriptor.scenesDirectory} (${bytes} bytes of JSON)`);
+    log(
+      `wrote ${written.length} scene file(s) to ${descriptor.scenesDirectory} (${bytes} bytes of JSON)`,
+    );
     for (const path of written) log(`  ${path.replace(/\\/g, "/")}`);
     return 0;
   }
   const files = await listGameSceneFiles(descriptor);
   if (options.json) {
-    log(JSON.stringify({ directory: descriptor.scenesDirectory, scenes: files.map((file) => file.name) }, null, 2));
+    log(
+      JSON.stringify(
+        {
+          directory: descriptor.scenesDirectory,
+          scenes: files.map((file) => file.name),
+        },
+        null,
+        2,
+      ),
+    );
     return 0;
   }
   if (files.length === 0) {
@@ -271,7 +300,11 @@ export async function commandTest(options: CliOptions, log = console.log): Promi
         `draws=${String(probe.draws).padEnd(4)} frames=${probe.frames}${suffix}`,
     );
   }
-  log(failures.length === 0 ? "all scenes simulated cleanly" : `${failures.length} scene(s) had problems`);
+  log(
+    failures.length === 0
+      ? "all scenes simulated cleanly"
+      : `${failures.length} scene(s) had problems`,
+  );
   return failures.length === 0 ? 0 : 1;
 }
 
@@ -363,6 +396,16 @@ export async function commandExport(options: CliOptions, log = console.log): Pro
   log(`bundle:     ${result.bundlePath} (${result.bundleBytes} bytes)`);
   log(`scenes:     ${result.scenes.join(", ")} (start: ${result.startScene})`);
   for (const warning of [...loaded.warnings, ...result.warnings]) log(`warning: ${warning}`);
+
+  if (options.out && result.exePath) {
+    const target = resolveExportTarget(options.out, {
+      workspaceRoot: absolutePath("."),
+      gameId: loaded.descriptor.id,
+      fallback: result.exePath,
+    });
+    const installed = await placeExportedGame(result.exePath, target);
+    log(`installed:  ${installed}`);
+  }
 
   if (options.verify && result.exePath) {
     log("");

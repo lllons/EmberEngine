@@ -59,7 +59,9 @@ Deno.test("an unknown path is a 404", async () => {
 
 Deno.test("GET /api/game describes the loaded game", async () => {
   await withStudio(async (studio) => {
-    const { status, body } = await json<{ described: { id: string; scenes: string[] }; scenes: unknown[] }>(
+    const { status, body } = await json<
+      { described: { id: string; scenes: string[] }; scenes: unknown[] }
+    >(
       studio,
       "/api/game",
     );
@@ -114,6 +116,33 @@ Deno.test("POST /api/scenes creates a scene file that the list then shows", asyn
 
       const listed = await json<{ scenes: string[] }>(studio, "/api/scenes");
       assert(listed.body.scenes.includes(name));
+    } finally {
+      await Deno.remove(`${gameDirectory}/scenes/${name}.emberscene`).catch(() => {});
+    }
+  });
+});
+
+Deno.test("a scene created through the API can be simulated immediately", async () => {
+  const name = `studio-sim-${Date.now().toString(36)}`;
+  await withStudio(async (studio) => {
+    try {
+      const created = await studio.handle(
+        new Request("http://studio/api/scenes", {
+          method: "POST",
+          body: JSON.stringify({ name, template: "platformer" }),
+        }),
+      );
+      assertEquals(created.status, 201);
+      const response = await studio.handle(
+        new Request("http://studio/api/simulate", {
+          method: "POST",
+          body: JSON.stringify({ scene: name, seconds: 0.5 }),
+        }),
+      );
+      assertEquals(response.status, 200);
+      const result = await response.json() as { scene: string; frames: number };
+      assertEquals(result.scene, name);
+      assertEquals(result.frames, 30);
     } finally {
       await Deno.remove(`${gameDirectory}/scenes/${name}.emberscene`).catch(() => {});
     }
@@ -214,7 +243,9 @@ Deno.test("POST /api/simulate rejects an unknown scene", async () => {
 
 Deno.test("POST /api/reload re-reads the game folder", async () => {
   await withStudio(async (studio) => {
-    const response = await studio.handle(new Request("http://studio/api/reload", { method: "POST" }));
+    const response = await studio.handle(
+      new Request("http://studio/api/reload", { method: "POST" }),
+    );
     assertEquals(response.status, 200);
     const result = await response.json() as { ok: boolean; scenes: string[] };
     assertEquals(result.ok, true);

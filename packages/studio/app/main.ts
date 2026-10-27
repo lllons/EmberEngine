@@ -12,10 +12,11 @@
 
 import {
   type Camera2DState,
+  deserializeScene,
   type Entity,
   type Scene,
+  Theme,
   Transform,
-  deserializeScene,
 } from "@ember/core";
 import { buildTextures, type TextureSources } from "@ember/assets";
 import {
@@ -27,7 +28,7 @@ import {
 } from "@ember/render2d";
 import type { Game } from "@ember/runtime";
 import { createDomCanvasFactory } from "@ember/player/app/canvas-factory";
-import { StudioApi, type GameInfo } from "./api.ts";
+import { type GameInfo, StudioApi } from "./api.ts";
 import { button, clear, el, panel, select } from "./dom.ts";
 import { renderInspector } from "./inspector.ts";
 import { EditorSession } from "./session.ts";
@@ -59,7 +60,9 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
     scene.name = entry.name;
     scenes.set(entry.name, scene);
   }
-  if (scenes.size === 0) throw new Error("this game has no scenes — create one in the editor first");
+  if (scenes.size === 0) {
+    throw new Error("this game has no scenes — create one in the editor first");
+  }
   const game = options.createGame({ scenes, start: info.described.start ?? undefined });
 
   const textures = options.textureSources
@@ -158,7 +161,9 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
       info.descriptor.id,
       session.sceneName + (session.dirty ? " *" : ""),
       `${session.scene.entityCount} entities`,
-      session.selection === null ? "no selection" : `selected ${session.scene.labelOf(session.selection)}`,
+      session.selection === null
+        ? "no selection"
+        : `selected ${session.scene.labelOf(session.selection)}`,
       session.mode === "play" ? "PLAYING" : "editing",
       `zoom ${editingCamera.zoom.toFixed(2)}x`,
       reason,
@@ -194,14 +199,18 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
     if (entity === null || !session.scene.world.isAlive(entity)) return;
     const transform = session.scene.world.get(entity, Transform);
     if (!transform) return;
-      const point = worldToScreen(editingCamera, { width: canvas.width, height: canvas.height }, transform.position);
+    const point = worldToScreen(
+      editingCamera,
+      { width: canvas.width, height: canvas.height },
+      transform.position,
+    );
     ctx.save();
-    ctx.strokeStyle = "#ffc857";
+    ctx.strokeStyle = Theme.accent;
     ctx.lineWidth = 1.5;
     ctx.strokeRect(point.x - 22, point.y - 22, 44, 44);
     ctx.beginPath();
     ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffc857";
+    ctx.fillStyle = Theme.accent;
     ctx.fill();
     ctx.restore();
   }
@@ -237,7 +246,8 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
 
   function summariseComponents(components: string[]): string {
     const interesting = components.filter((name) =>
-      ["Sprite", "RectShape", "CircleShape", "TextLabel", "Script", "BoxCollider", "RigidBody"].includes(name)
+      ["Sprite", "RectShape", "CircleShape", "TextLabel", "Script", "BoxCollider", "RigidBody"]
+        .includes(name)
     );
     const shown = interesting.slice(0, 3).join(" ");
     return interesting.length > 3 ? `${shown} +${interesting.length - 3}` : shown;
@@ -264,7 +274,9 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
           title: `${entry.entities} entities · ${entry.width}x${entry.height}`,
           on: {
             click: async () => {
-              if (session.dirty && !confirm(`discard unsaved changes to ${session.sceneName}?`)) return;
+              if (session.dirty && !confirm(`discard unsaved changes to ${session.sceneName}?`)) {
+                return;
+              }
               await loadSceneByName(entry.name);
             },
           },
@@ -277,7 +289,8 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
     const newSceneButton = button("new scene…", async () => {
       const name = prompt("scene name (a-z, 0-9, dashes)");
       if (!name) return;
-      const template = (prompt("template: empty, platformer, title", "platformer") ?? "empty").trim();
+      const template = (prompt("template: empty, platformer, title", "platformer") ?? "empty")
+        .trim();
       try {
         const created = await api.createScene(name, template);
         log(`created scene ${created.name} (${template})`);
@@ -294,7 +307,9 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
     clear(assetsPanel.body);
     assetsPanel.setStatus(`${assets.length} assets`);
     if (assets.length === 0) {
-      assetsPanel.body.append(el("p", { className: "muted", text: "no files next to the game yet" }));
+      assetsPanel.body.append(
+        el("p", { className: "muted", text: "no files next to the game yet" }),
+      );
       return;
     }
     for (const asset of assets.slice(0, 60)) {
@@ -369,7 +384,10 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
 
   toolbar.append(
     el("span", { className: "brand", text: "Ember Studio" }),
-    el("span", { className: "game-title", text: `${info.descriptor.title} v${info.descriptor.version}` }),
+    el("span", {
+      className: "game-title",
+      text: `${info.descriptor.title} v${info.descriptor.version}`,
+    }),
     sceneSelect,
     button("save", () => void save(), { title: "Ctrl+S", kind: "primary" }),
     button("reload", async () => {
@@ -397,20 +415,33 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
       }
     }, { title: "simulate this scene headlessly (3s)" }),
     button("export .exe", async () => {
-      log("exporting… (this runs deno bundle + deno compile)");
+      const destination = await askWhereToInstall(info.descriptor.title);
+      if (destination === null) {
+        log("export cancelled");
+        return;
+      }
+      log("compiling… (this runs deno bundle + deno compile)");
       try {
-        const response = await api.exportGame(true);
+        const response = await api.exportGame(true, destination || undefined);
         for (const step of response.export.steps) {
           log(`  ${step.name}: ${step.detail} (${step.ms.toFixed(0)}ms)`);
         }
-        log(`exported ${response.export.exePath} (${(response.export.exeBytes / 1024 / 1024).toFixed(1)} MiB)`);
+        log(
+          `exported ${response.export.exePath} (${
+            (response.export.exeBytes / 1024 / 1024).toFixed(1)
+          } MiB)`,
+        );
+        if (response.installed) log(`installed at ${response.installed}`);
         for (const check of response.verification?.checks ?? []) {
-          log(`  ${check.ok ? "ok" : "FAIL"} ${check.name}: ${check.detail}`, check.ok ? "info" : "error");
+          log(
+            `  ${check.ok ? "ok" : "FAIL"} ${check.name}: ${check.detail}`,
+            check.ok ? "info" : "error",
+          );
         }
       } catch (error) {
         log(`export failed: ${(error as Error).message}`, "error");
       }
-    }, { title: "build dist/<game>.exe and verify it" }),
+    }, { title: "compile the game and choose where it is installed" }),
     playButton,
     button("step", () => session.stepPlay(1), { title: "advance one fixed step" }),
     button("colliders", () => {
@@ -439,11 +470,17 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
       x: ((event.clientX - rect.left) / rect.width) * canvas.width,
       y: ((event.clientY - rect.top) / rect.height) * canvas.height,
     };
-    editingCamera = zoomAtScreenPoint(editingCamera, viewportSize(), anchor, event.deltaY < 0 ? 1.12 : 1 / 1.12);
+    editingCamera = zoomAtScreenPoint(
+      editingCamera,
+      viewportSize(),
+      anchor,
+      event.deltaY < 0 ? 1.12 : 1 / 1.12,
+    );
     updateStatus("zoom");
   }, { passive: false });
 
-  let dragStart: { x: number; y: number; entity: Entity; world: { x: number; y: number } } | null = null;
+  let dragStart: { x: number; y: number; entity: Entity; world: { x: number; y: number } } | null =
+    null;
   let panStart: { x: number; y: number; camera: { x: number; y: number } } | null = null;
 
   canvas.addEventListener("mousedown", (event) => {
@@ -478,8 +515,12 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
     const point = canvasPoint(event);
     const transform = session.scene.world.get(dragStart.entity, Transform);
     if (!transform) return;
-    transform.position.x = Math.round(dragStart.world.x + (point.x - dragStart.x) / editingCamera.zoom);
-    transform.position.y = Math.round(dragStart.world.y + (point.y - dragStart.y) / editingCamera.zoom);
+    transform.position.x = Math.round(
+      dragStart.world.x + (point.x - dragStart.x) / editingCamera.zoom,
+    );
+    transform.position.y = Math.round(
+      dragStart.world.y + (point.y - dragStart.y) / editingCamera.zoom,
+    );
   });
 
   window.addEventListener("mouseup", () => {
@@ -501,7 +542,9 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
   }
 
   window.addEventListener("keydown", (event) => {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      return;
+    }
     const meta = event.ctrlKey || event.metaKey;
     if (meta && event.key.toLowerCase() === "s") {
       event.preventDefault();
@@ -513,7 +556,10 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
       session.undo();
       return;
     }
-    if (meta && (event.key.toLowerCase() === "y" || (event.shiftKey && event.key.toLowerCase() === "z"))) {
+    if (
+      meta &&
+      (event.key.toLowerCase() === "y" || (event.shiftKey && event.key.toLowerCase() === "z"))
+    ) {
       event.preventDefault();
       session.redo();
       return;
@@ -566,8 +612,49 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
   return app;
 }
 
+/**
+ * The export dialog: a small in-page window that asks where the compiled game should be
+ * installed. Resolves with the answer, an empty string for the default `dist/` location, or
+ * null when the user cancels.
+ */
+function askWhereToInstall(gameTitle: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const input = el("input", { className: "dialog-input" });
+    input.placeholder = "leave empty to keep dist/<game>.exe";
+    input.spellcheck = false;
+
+    const finish = (value: string | null) => {
+      overlay.remove();
+      resolve(value);
+    };
+
+    const overlay = el("div", { className: "dialog-overlay" }, [
+      el("div", { className: "dialog" }, [
+        el("h2", { text: `Export ${gameTitle}` }),
+        el("p", {
+          text: "Where should the game be installed? Type a folder, or a full path ending in .exe.",
+        }),
+        input,
+        el("div", { className: "dialog-actions" }, [
+          button("cancel", () => finish(null)),
+          button("export here", () => finish(input.value.trim()), { kind: "primary" }),
+        ]),
+      ]),
+    ]);
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") finish(input.value.trim());
+      if (event.key === "Escape") finish(null);
+    });
+    document.body.append(overlay);
+    input.focus();
+  });
+}
+
 function stamp(): string {
   const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:` +
+  return `${String(now.getHours()).padStart(2, "0")}:${
+    String(now.getMinutes()).padStart(2, "0")
+  }:` +
     `${String(now.getSeconds()).padStart(2, "0")}`;
 }

@@ -23,22 +23,30 @@
 
 import {
   BoxCollider,
+  deserializeScene,
+  RigidBody,
   type Scene,
   Scene as SceneClass,
   Script,
+  serializeScene,
   Sprite,
   Tag,
   TextLabel,
-  RigidBody,
-  Velocity,
-  deserializeScene,
-  serializeScene,
+  Theme,
   validateSceneFile,
+  Velocity,
 } from "@ember/core";
-import { exportGame, verifyExport, type ExportResult, type ExportVerification } from "@ember/packager";
+import {
+  exportGame,
+  type ExportResult,
+  type ExportVerification,
+  placeExportedGame,
+  resolveExportTarget,
+  verifyExport,
+} from "@ember/packager";
 import type { Game, RuntimeSession } from "@ember/runtime";
 import { sceneDigest } from "@ember/runtime";
-import { assetKindOf, scanAssetFolder, type AssetManifest } from "@ember/assets";
+import { assetKindOf, type AssetManifest, scanAssetFolder } from "@ember/assets";
 import {
   type GameDescriptor,
   listGameSceneFiles,
@@ -83,7 +91,10 @@ interface StudioState {
   descriptor: GameDescriptor;
 }
 
-const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
+const JSON_HEADERS = {
+  "content-type": "application/json; charset=utf-8",
+  "cache-control": "no-store",
+};
 
 export async function startStudio(options: StudioOptions): Promise<StudioServer> {
   const logs: string[] = [];
@@ -98,7 +109,12 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
     game: undefined as unknown as Game,
     scenes: new Map(),
     sceneSource: options.sceneSource,
-    manifest: { format: "emberassets", version: 1, root: options.descriptor.directory, entries: [] },
+    manifest: {
+      format: "emberassets",
+      version: 1,
+      root: options.descriptor.directory,
+      entries: [],
+    },
     warnings: [],
     descriptor: options.descriptor,
   };
@@ -109,11 +125,15 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
       game: loaded.game,
       scenes: loaded.scenes,
       sceneSource: loaded.sceneSource,
-      manifest: await scanAssetFolder(state.descriptor.directory, { ignore: ["build", "dist", "scenes"] }),
+      manifest: await scanAssetFolder(state.descriptor.directory, {
+        ignore: ["build", "dist", "scenes"],
+      }),
       warnings: loaded.warnings,
       descriptor: loaded.descriptor,
     };
-    log(`loaded ${loaded.descriptor.id}: ${loaded.game.sceneNames().length} scene(s) from ${loaded.sceneSource}`);
+    log(
+      `loaded ${loaded.descriptor.id}: ${loaded.game.sceneNames().length} scene(s) from ${loaded.sceneSource}`,
+    );
   }
 
   await reload();
@@ -151,7 +171,10 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
       }
       if (request.method === "GET" && path === "/studio.js") {
         return new Response(appSource, {
-          headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" },
+          headers: {
+            "content-type": "text/javascript; charset=utf-8",
+            "cache-control": "no-store",
+          },
         });
       }
       if (path.startsWith("/api/")) {
@@ -187,14 +210,20 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
           width: scene.resources.viewport.width,
           height: scene.resources.viewport.height,
         })),
-        assets: state.manifest.entries.map((entry) => ({ ...entry, kind: assetKindOf(entry.path) })),
+        assets: state.manifest.entries.map((entry) => ({
+          ...entry,
+          kind: assetKindOf(entry.path),
+        })),
         warnings: state.warnings,
       });
     }
 
     if (method === "GET" && path === "/api/scenes") {
       const files = await listGameSceneFiles(state.descriptor);
-      return json({ directory: state.descriptor.scenesDirectory, scenes: files.map((file) => file.name) });
+      return json({
+        directory: state.descriptor.scenesDirectory,
+        scenes: files.map((file) => file.name),
+      });
     }
 
     if (path.startsWith("/api/scenes/")) {
@@ -213,6 +242,9 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
         scene.name = name;
         const filePath = await writeScene(state.descriptor, name, scene);
         state.scenes.set(name, scene);
+        // Keep the live game in step with the editor so `/api/simulate` and play use the
+        // saved content instead of the copy that existed when the server started.
+        state.game.registerScene(name, scene);
         log(`saved ${name} -> ${filePath.replace(/\\/g, "/")}`);
         return json({ ok: true, name, path: filePath, entities: scene.entityCount });
       }
@@ -222,6 +254,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
         if (!file) return json({ error: `no scene file "${name}"` }, 404);
         await Deno.remove(file.path);
         state.scenes.delete(name);
+        state.game.removeScene(name);
         log(`deleted ${name}`);
         return json({ ok: true, name });
       }
@@ -240,6 +273,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
       const scene = createSceneTemplate(name, body.template ?? "empty", state);
       const filePath = await writeScene(state.descriptor, name, scene);
       state.scenes.set(name, scene);
+      state.game.registerScene(name, scene);
       log(`created ${name} (${body.template ?? "empty"})`);
       return json({ ok: true, name, path: filePath, scene: serializeScene(scene) }, 201);
     }
@@ -268,17 +302,20 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
       const pressed = body.keys ?? [];
       const before = summarize(session);
       for (let frame = 0; frame < frames; frame++) {
-        session.step(session.fixedDt, frame === 0 && pressed.length > 0
-          ? {
-            held: pressed,
-            pressed,
-            released: [],
-            mouse: { x: 0, y: 0 },
-            mouseHeld: [],
-            mousePressed: [],
-            mouseReleased: [],
-          }
-          : undefined);
+        session.step(
+          session.fixedDt,
+          frame === 0 && pressed.length > 0
+            ? {
+              held: pressed,
+              pressed,
+              released: [],
+              mouse: { x: 0, y: 0 },
+              mouseHeld: [],
+              mousePressed: [],
+              mouseReleased: [],
+            }
+            : undefined,
+        );
       }
       const after = summarize(session);
       log(`simulated ${sceneName} for ${seconds}s (digest ${after.digest})`);
@@ -286,14 +323,28 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
     }
 
     if (method === "POST" && path === "/api/export") {
-      const body = await request.json().catch(() => ({})) as { verify?: boolean };
+      const body = await request.json().catch(() => ({})) as {
+        verify?: boolean;
+        /** Folder or `.exe` path the player asked to install the game into. */
+        destination?: string;
+      };
       const result = await runExport(state, options.workspaceRoot, log);
+      let installed: string | null = null;
+      if (body.destination && result.exePath) {
+        const target = resolveExportTarget(body.destination, {
+          workspaceRoot: options.workspaceRoot,
+          gameId: state.descriptor.id,
+          fallback: result.exePath,
+        });
+        installed = await placeExportedGame(result.exePath, target);
+        log(`installed ${installed}`);
+      }
       const verification = body.verify === false
         ? null
         : result.exePath
         ? await verifyExport(result.exePath, { expectScenes: result.scenes })
         : null;
-      return json({ export: describeExport(result), verification });
+      return json({ export: describeExport(result), verification, installed });
     }
 
     if (method === "GET" && path === "/api/logs") {
@@ -342,7 +393,10 @@ function createSceneTemplate(name: string, template: string, state: StudioState)
   scene.metadata = { template, createdBy: "ember studio" };
 
   if (template === "platformer") {
-    const ground = scene.createEntity({ name: "ground", position: { x: width / 2, y: height - 40 } });
+    const ground = scene.createEntity({
+      name: "ground",
+      position: { x: width / 2, y: height - 40 },
+    });
     scene.world.add(ground, RigidBody, { type: "static", gravityScale: 0 });
     scene.world.add(ground, BoxCollider, { width, height: 80, solid: true });
     scene.world.add(ground, Sprite, { texture: "ground", width, height: 80, layer: 5 });
@@ -365,8 +419,14 @@ function createSceneTemplate(name: string, template: string, state: StudioState)
       align: "center",
       layer: 100,
     });
-    const trigger = scene.createEntity({ name: "start-trigger", position: { x: width / 2, y: height / 2 } });
-    scene.world.add(trigger, Script, { name: "runner.title", props: { target: state.descriptor.start } });
+    const trigger = scene.createEntity({
+      name: "start-trigger",
+      position: { x: width / 2, y: height / 2 },
+    });
+    scene.world.add(trigger, Script, {
+      name: "runner.title",
+      props: { target: state.descriptor.start },
+    });
   }
   return scene;
 }
@@ -449,8 +509,8 @@ export function pageHtml(title: string): string {
 <title>${escapeHtml(title)} — Ember Studio</title>
 <style>
   :root {
-    --bg: #0b0e16; --panel: #121728; --panel-2: #0e1322; --line: #1e2740;
-    --text: #e7ecf6; --muted: #8b93a7; --accent: #ff7a2f; --gold: #ffc857; --ok: #5ec27a; --bad: #e5484d;
+    --bg: ${Theme.background}; --panel: ${Theme.panel}; --panel-2: ${Theme.panelDeep}; --line: ${Theme.border};
+    --text: ${Theme.text}; --muted: ${Theme.muted}; --accent: ${Theme.accent}; --gold: ${Theme.accent}; --ok: ${Theme.highlight}; --bad: ${Theme.danger};
   }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
   body { font: 13px/1.45 "Segoe UI", system-ui, sans-serif; overflow: hidden; }
@@ -480,31 +540,31 @@ export function pageHtml(title: string): string {
   .panel-body { padding: 6px 8px; overflow: auto; min-height: 0; }
   .column.center > .panel:first-child .panel-body { padding: 0; }
   .viewport {
-    position: relative; display: grid; place-items: center; background: #05070c;
+    position: relative; display: grid; place-items: center; background: var(--bg);
     min-height: 320px; overflow: hidden;
   }
-  .viewport-canvas { display: block; max-width: 100%; max-height: 100%; background: #05070c; }
+  .viewport-canvas { display: block; max-width: 100%; max-height: 100%; background: var(--bg); }
   .btn {
     font: inherit; padding: 4px 9px; border-radius: 4px; border: 1px solid var(--line);
-    background: #1a2136; color: var(--text); cursor: pointer;
+    background: var(--panel-2); color: var(--text); cursor: pointer;
   }
-  .btn:hover { background: #232c47; }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #1b1005; font-weight: 600; }
-  .btn.danger { background: transparent; border-color: #46202a; color: #ff9aa0; padding: 2px 7px; }
+  .btn:hover { background: var(--line); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
+  .btn.danger { background: transparent; border-color: ${Theme.dangerDeep}; color: ${Theme.dangerLight}; padding: 2px 7px; }
   .hierarchy-row, .scene-row {
     display: flex; width: 100%; gap: 6px; align-items: center; text-align: left;
     background: transparent; border: 0; border-radius: 3px; color: var(--text);
     font: inherit; padding: 3px 6px; cursor: pointer;
   }
-  .hierarchy-row:hover, .scene-row:hover { background: #1b2338; }
-  .hierarchy-row.selected, .scene-row.selected { background: #2a3350; outline: 1px solid #3d4a75; }
+  .hierarchy-row:hover, .scene-row:hover { background: var(--panel-2); }
+  .hierarchy-row.selected, .scene-row.selected { background: ${Theme.rowSelected}; outline: 1px solid ${Theme.border}; }
   .hierarchy-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hierarchy-meta, .scene-meta { color: var(--muted); font-size: 11px; }
   .scene-actions { padding: 4px 2px; }
   .asset-row { display: flex; gap: 6px; padding: 2px 4px; color: var(--muted); font-size: 12px; }
-  .asset-kind { text-transform: uppercase; font-size: 10px; padding: 0 4px; border-radius: 3px; background: #1e2740; color: var(--text); }
-  .kind-image { background: #2b4a7d; } .kind-json, .kind-scene { background: #3d3a1f; } .kind-audio { background: #2f5d47; }
-  .component { border: 1px solid var(--line); border-radius: 4px; margin-bottom: 7px; background: #101526; }
+  .asset-kind { text-transform: uppercase; font-size: 10px; padding: 0 4px; border-radius: 3px; background: var(--line); color: var(--text); }
+  .kind-image { background: ${Theme.accentSoft}; } .kind-json, .kind-scene { background: var(--panel-2); } .kind-audio { background: ${Theme.dangerSoft}; }
+  .component { border: 1px solid var(--line); border-radius: 4px; margin-bottom: 7px; background: var(--panel-2); }
   .component-head { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-bottom: 1px solid var(--line); }
   .component-title { font-weight: 600; font-size: 12px; }
   .component-head .btn { margin-left: auto; }
@@ -513,7 +573,7 @@ export function pageHtml(title: string): string {
   .row-label { width: 96px; color: var(--muted); font-size: 12px; flex: 0 0 auto; }
   .field {
     font: inherit; flex: 1; min-width: 0; padding: 3px 5px; border-radius: 3px;
-    border: 1px solid var(--line); background: #0c1120; color: var(--text);
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
   }
   .field.json { width: 100%; min-height: 74px; font: 12px/1.4 Consolas, monospace; }
   .field.color { padding: 1px; height: 22px; }
@@ -523,11 +583,26 @@ export function pageHtml(title: string): string {
   .muted { color: var(--muted); }
   .panel:last-child .panel-body { }
   .console .panel-body, .column.center > .panel:last-child .panel-body {
-    font: 12px/1.5 Consolas, monospace; background: #080b14; max-height: 210px;
+    font: 12px/1.5 Consolas, monospace; background: var(--bg); max-height: 210px;
   }
   .log-line { white-space: pre-wrap; }
   .log-line.warn { color: var(--gold); }
-  .log-line.error { color: #ff8a8a; }
+  .log-line.error { color: ${Theme.dangerLight}; }
+  .dialog-overlay {
+    position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+    background: rgba(3, 6, 12, 0.72); backdrop-filter: blur(2px);
+  }
+  .dialog {
+    width: min(520px, 92vw); padding: 18px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--panel); box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  }
+  .dialog h2 { margin: 0 0 6px; font-size: 15px; }
+  .dialog p { margin: 0 0 12px; color: var(--muted); }
+  .dialog-input {
+    width: 100%; box-sizing: border-box; font: inherit; padding: 7px 9px; border-radius: 4px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+  }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
   .statusbar {
     flex: 0 0 auto; padding: 4px 10px; background: var(--panel); border-top: 1px solid var(--line);
     color: var(--muted); font-size: 12px;
@@ -563,7 +638,11 @@ startStudioApp({ createGame, textureSources }).catch((error) => {
   const message = error instanceof Error ? error.stack ?? error.message : String(error);
   document.body.innerHTML = "";
   const pre = document.createElement("pre");
-  pre.style.cssText = "color:#ff8a8a;padding:16px;white-space:pre-wrap;font:13px monospace";
+  pre.style.cssText = ${
+      JSON.stringify(
+        `color:${Theme.dangerLight};padding:16px;white-space:pre-wrap;font:13px monospace`,
+      )
+    };
   pre.textContent = "Ember Studio failed to start:\\n\\n" + message;
   document.body.append(pre);
   console.error(error);
@@ -592,7 +671,9 @@ startStudioApp({ createGame, textureSources }).catch((error) => {
   const decoder = new TextDecoder();
   if (output.code !== 0) {
     throw new Error(
-      `could not bundle the editor UI (exit ${output.code})\n${decoder.decode(output.stderr) || decoder.decode(output.stdout)}`,
+      `could not bundle the editor UI (exit ${output.code})\n${
+        decoder.decode(output.stderr) || decoder.decode(output.stdout)
+      }`,
     );
   }
   const source = await Deno.readTextFile(`${buildDirectory}/studio.js`);
@@ -615,6 +696,10 @@ function html(body: string): Response {
 }
 
 function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (character) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
+  return text.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ??
+        character,
+  );
 }
