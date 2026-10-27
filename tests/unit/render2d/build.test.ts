@@ -6,6 +6,7 @@ import { assert, assertEquals, assertAlmostEquals } from "@std/assert";
 import {
   BoxCollider,
   CircleShape,
+  colliderWorldRect,
   Parent,
   RectShape,
   Scene,
@@ -242,6 +243,22 @@ Deno.test("sprite commands carry texture, uv, tint and flip", () => {
   assertEquals(sprite.flipX, true);
   assertAlmostEquals(sprite.uv.u0, 0.5, 1e-9);
   assertAlmostEquals(sprite.uv.u1, 0.75, 1e-9);
+});
+
+Deno.test("sprite rotation tilts the image without growing the collider", () => {
+  const scene = sceneWithCamera();
+  const entity = scene.createEntity({ position: vec2(400, 300) });
+  scene.world.add(entity, Sprite, { texture: "coin", width: 28, height: 22, rotation: 0.5 });
+  scene.world.add(entity, BoxCollider, { width: 28, height: 22 });
+
+  const sprite = buildDrawList(scene).commands.find((command) => command.kind === "sprite") as SpriteCommand;
+  assertAlmostEquals(sprite.rotation, 0.5, 1e-9);
+
+  // The collider still follows the transform only, so the banked image does not clip.
+  const bounds = colliderWorldRect(scene.world, entity);
+  assert(bounds !== undefined, "collider has bounds");
+  assertAlmostEquals(bounds.w, 28, 1e-9);
+  assertAlmostEquals(bounds.h, 22, 1e-9);
 });
 
 Deno.test("sprite frames wrap around instead of falling off the strip", () => {

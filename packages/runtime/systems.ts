@@ -296,7 +296,8 @@ export interface CollisionSystemOptions {
  * - `static` and `kinematic` bodies never move; `dynamic` bodies absorb the full correction.
  * - Two dynamic bodies split the correction evenly.
  * - Landing on top of something sets `RigidBody.grounded` for the rest of the step.
- * - Triggers report a `CollisionRecord` and are never resolved.
+ * - Triggers report a `CollisionRecord` and are never resolved. They do not need to be
+ *   solid: a trigger volume is the natural way to score a zone the player passes through.
  *
  * Pairs are visited in ascending (a, b) id order, so identical scenes resolve identically.
  */
@@ -319,7 +320,11 @@ export function collisionSystem(options: CollisionSystemOptions = {}): System {
         const b = entities[j];
         const colliderA = world.require(a, BoxCollider);
         const colliderB = world.require(b, BoxCollider);
-        if (!colliderA.solid || !colliderB.solid) continue;
+        // Solid bodies collide and triggers report overlaps; anything else is scenery.
+        // A trigger does not have to be solid, otherwise a pass-through score zone could
+        // never be expressed without also blocking the player.
+        if (!(colliderA.solid || colliderA.trigger)) continue;
+        if (!(colliderB.solid || colliderB.trigger)) continue;
 
         const rectA = colliderWorldRect(world, a);
         const rectB = colliderWorldRect(world, b);

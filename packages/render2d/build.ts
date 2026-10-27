@@ -136,7 +136,9 @@ export function buildEntityCommands(
         : FULL_UV,
       tint: sprite.tint,
       alpha: sprite.alpha,
-      rotation: transform.rotation,
+      // Sprite-local rotation is cosmetic: it tilts the image without touching the
+      // transform (and therefore the collider).
+      rotation: transform.rotation + sprite.rotation,
       anchorX: 0.5,
       anchorY: 0.5,
       flipX: sprite.flipX,

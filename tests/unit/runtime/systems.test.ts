@@ -428,6 +428,37 @@ Deno.test("triggers are reported but never resolved", () => {
   assertEquals(scene.world.require(mover, RigidBody).grounded, false, "a trigger never grounds");
 });
 
+Deno.test("a non-solid trigger still reports an overlap", () => {
+  const scene = new Scene({ name: "pass-through", gravity: vec2(0, 0) });
+  const zone = scene.createEntity({ name: "zone", position: vec2(0, 0) });
+  // The shape a score zone uses: reports the pass, never blocks it.
+  scene.world.add(zone, BoxCollider, { width: 40, height: 40, trigger: true, solid: false });
+  const bird = scene.createEntity({ name: "bird", position: vec2(0, 0) });
+  scene.world.add(bird, RigidBody, { type: "dynamic" });
+  scene.world.add(bird, Velocity, { x: 50, y: 0 });
+  scene.world.add(bird, BoxCollider, { width: 20, height: 20 });
+
+  const session = new RuntimeSession({ scene, systems: [collisionSystem()] });
+  session.step(DT);
+
+  assertEquals(session.collisions.length, 1);
+  assertEquals(session.collisions[0].trigger, true);
+  assertEquals(scene.world.require(bird, Transform).position, vec2(0, 0), "the bird is not pushed");
+  assertEquals(scene.world.require(bird, RigidBody).grounded, false);
+  assertAlmostEquals(scene.world.require(bird, Velocity).x, 50, 1e-12, "velocity survives");
+});
+
+Deno.test("a non-solid trigger ignores non-interactive scenery", () => {
+  const scene = new Scene({ name: "scenery", gravity: vec2(0, 0) });
+  const zone = scene.createEntity({ name: "zone", position: vec2(0, 0) });
+  scene.world.add(zone, BoxCollider, { width: 40, height: 40, trigger: true });
+  const scenery = scene.createEntity({ name: "scenery", position: vec2(0, 0) });
+  scene.world.add(scenery, BoxCollider, { width: 40, height: 40, solid: false });
+  const session = new RuntimeSession({ scene, systems: [collisionSystem()] });
+  session.step(DT);
+  assertEquals(session.collisions.length, 0);
+});
+
 Deno.test("trigger reporting can be silenced", () => {
   const scene = new Scene({ name: "quiet-trigger", gravity: vec2(0, 0) });
   const zone = scene.createEntity({ name: "zone", position: vec2(0, 0) });

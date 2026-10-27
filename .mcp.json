@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "emberengine": {
+      "command": "deno",
+      "args": ["run", "-A", "--unstable-ffi", "packages/mcp/main.ts"]
+    }
+  }
+}

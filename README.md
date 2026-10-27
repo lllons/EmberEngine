@@ -21,6 +21,8 @@ single toolchain: runtime, test runner, bundler and `.exe` compiler.
 - **Data-driven scenes** — `.emberscene` JSON with a versioned format.
 - **Same runtime everywhere** — editor Play mode, headless tests, and exported games run the same
   simulation code.
+- **Agent-ready (MCP)** — a built-in Model Context Protocol server lets Claude Code, Cursor and
+  other coding agents build scenes, edit entities, simulate gameplay and export the game from chat.
 - **No third-party runtime dependencies.**
 
 ## Quick start
@@ -30,6 +32,7 @@ deno task editor        # native editor window (Win32/GDI)
 deno task play          # play the sample game
 deno task test          # run the test suite
 deno task export        # build dist/ember-runner.exe
+deno task mcp           # MCP server on stdio (for coding agents)
 ```
 
 ### Build the native editor executable
@@ -91,6 +94,35 @@ Exporting asks where to install the game: the studio shows an **Export** dialog,
 Exported games are standalone Windows executables that serve their player locally and open it in the
 default browser. The editor itself is native.
 
+### Drive the engine from a coding agent (MCP)
+
+`packages/mcp` is a dependency-free Model Context Protocol server on stdio, so an MCP-capable agent
+(Claude Code, Cursor, …) can build the game from chat. It drives the same loader, runtime and packager
+as the CLI, so every edit lands as a real `.emberscene` on disk. `.mcp.json` is committed, so Claude
+Code picks the server up with no setup:
+
+```json
+{
+  "mcpServers": {
+    "emberengine": {
+      "command": "deno",
+      "args": ["run", "-A", "--unstable-ffi", "packages/mcp/main.ts"]
+    }
+  }
+}
+```
+
+For an agent that should not need a checkout, build the standalone server and point it at the
+executable:
+
+```bash
+deno task build:mcp        # dist/EmberMCP.exe
+```
+
+Tools: `engine_info`, `component_catalog`, `scene_list`, `scene_read`, `scene_create`, `entity_add`,
+`entity_update`, `entity_delete`, `simulate`, `script_check`, `export_game`. A typical loop is
+`engine_info` → `scene_read` → `entity_add` / `entity_update` → `simulate` → `export_game`.
+
 ## Layout
 
 ```
@@ -100,9 +132,11 @@ packages/render3d    meshes, 3D camera, triangle pipeline, mixed frame ordering
 packages/runtime     fixed-step loop, systems, sessions, scripting, Game
 packages/editor      native Win32/GDI authoring application + examples
 packages/player      exported-game browser host
+packages/mcp         Model Context Protocol server (stdio) for coding agents
 packages/packager    export bundles and deno compile
 packages/cli         ember command routing
 games/ember-runner   sample platformer
+games/flappy         Flappy Ember one-button example game
 tests/               unit, integration, game and export suites
 legacy/cpp-engine    superseded C++/OpenGL prototype, kept for reference
 ```

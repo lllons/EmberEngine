@@ -1,0 +1,9 @@
+{
+  "id": "flappy-ember",
+  "title": "Flappy Ember",
+  "version": "0.1.0",
+  "entry": "src/main.ts",
+  "scenes": "scenes",
+  "start": "title",
+  "viewport": { "width": 480, "height": 720 }
+}

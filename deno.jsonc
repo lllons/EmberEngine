@@ -19,7 +19,8 @@
     "@ember/player/app/bootstrap": "./packages/player/app/bootstrap.ts",
     "@ember/player/app/host": "./packages/player/app/host.ts",
     "@ember/player/app/canvas-factory": "./packages/player/app/canvas-factory.ts",
-    "@ember/studio": "./packages/studio/mod.ts"
+    "@ember/studio": "./packages/studio/mod.ts",
+    "@ember/mcp": "./packages/mcp/mod.ts"
   },
   "tasks": {
     "ember": "deno run -A --unstable-ffi packages/cli/main.ts",
@@ -27,6 +28,8 @@
     "editor:native": "deno run -A --unstable-ffi packages/editor/main.ts",
     "studio": "deno run -A packages/cli/main.ts studio games/ember-runner",
     "build:editor": "deno compile --unstable-ffi --allow-ffi --allow-read --allow-write --allow-env --icon assets/emberengine.ico --output dist/EmberEngine.exe packages/editor/main.ts",
+    "mcp": "deno run -A --unstable-ffi packages/mcp/main.ts",
+    "build:mcp": "deno compile --unstable-ffi --allow-ffi --allow-read --allow-write --allow-env --allow-run --icon assets/emberengine.ico --output dist/EmberMCP.exe packages/mcp/main.ts",
     "play": "deno run -A packages/cli/main.ts play games/ember-runner",
     "export": "deno run -A packages/cli/main.ts export games/ember-runner",
     "test": "deno test -A tests/",
@@ -34,7 +37,7 @@
     "test:game": "deno test -A tests/game/",
     "test:integration": "deno test -A tests/integration/",
     "test:report": "deno run -A tools/test-report.ts",
-    "check": "deno check packages/cli/main.ts packages/editor/main.ts",
+    "check": "deno check packages/cli/main.ts packages/editor/main.ts packages/mcp/main.ts",
     "fmt": "deno fmt packages tests games tools",
     "lint": "deno lint packages tests games tools"
   },

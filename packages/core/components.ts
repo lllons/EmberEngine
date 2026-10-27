@@ -58,6 +58,12 @@ export const Sprite = defineComponent<{
   alpha: number;
   layer: number;
   flipX: boolean;
+  /**
+   * Visual rotation in radians, added to the transform's. Unlike a transform rotation it
+   * does not rotate the entity's collider, so a sprite can tilt (a bird banking) without
+   * growing its hitbox.
+   */
+  rotation: number;
   /** When > 0, animates across a horizontal strip of `frameCount` frames. */
   frameCount: number;
   framesPerSecond: number;
@@ -70,6 +76,7 @@ export const Sprite = defineComponent<{
   alpha: 1,
   layer: 0,
   flipX: false,
+  rotation: 0,
   frameCount: 1,
   framesPerSecond: 8,
   frame: 0,

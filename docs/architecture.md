@@ -108,6 +108,7 @@ Every concern has exactly one module that owns it. Cross-cutting duplication is 
 | `.exe` compilation (invoking `deno compile`)                                      | `packages/packager/mod.ts` (`exportGame`)                                | —                                   |
 | Where a compiled game is installed (dialog answer -> final path + copy)           | `packages/packager/mod.ts` (`resolveExportTarget`, `placeExportedGame`)  | —                                   |
 | Argument parsing, command routing                                                 | `packages/cli/main.ts`                                                   | editor, studio, packager, player    |
+| Agent surface: MCP tools over stdio (scenes, entities, simulate, export)           | `packages/mcp/{server,tools}.ts`                                         | gameloader, runtime, packager       |
 | Browser bundling of TS entries                                                    | `packages/packager/browser.ts`                                           | cli/studio build steps              |
 
 Rules that keep this true:
