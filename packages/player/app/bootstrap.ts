@@ -53,6 +53,9 @@ export async function startBrowserGame(options: BootstrapOptions): Promise<Boots
   const mounted = mountGame({
     mount: shell.stage,
     game,
+    // The bundle is the authority on which scene an export opens in: the game's own
+    // `start` may differ once scenes are registered in bundle order.
+    sceneName: bundle.game.start,
     resolveTexture: registries ? registries.resolver() : undefined,
     onStats: (stats) => {
       shell.status.textContent = `fps ${stats.fps.toFixed(0)} · ${stats.entityCount} entities · ` +
