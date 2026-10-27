@@ -26,7 +26,13 @@ import {
   Velocity,
   type World,
 } from "@ember/core";
-import { type ScriptBehaviour, type ScriptContext, ScriptRegistry } from "./scripting.ts";
+import {
+  compileInlineScriptFactory,
+  type ScriptBehaviour,
+  type ScriptContext,
+  type ScriptFactory,
+  ScriptRegistry,
+} from "./scripting.ts";
 import type { CollisionRecord, System, SystemContext } from "./session.ts";
 import { defineSystem, SystemOrder } from "./session.ts";
 
@@ -54,6 +60,8 @@ export function animationSystem(): System {
 interface ScriptRuntime {
   behaviour: ScriptBehaviour;
   name: string;
+  source: string;
+  key: string;
   props: Record<string, unknown>;
   started: boolean;
 }
@@ -66,11 +74,30 @@ export interface ScriptSystemOptions {
 
 /**
  * Runs `Script` behaviours. Behaviours are instantiated per entity, started once, updated in
- * ascending entity order and torn down when their entity despawns.
+ * ascending entity order and torn down when their entity despawns. A script with inline
+ * `source` is compiled on first use; source edits restart it. Compile and runtime errors are
+ * reported once per entity and disable that behaviour rather than aborting the session.
  */
 export function scriptSystem(options: ScriptSystemOptions = {}): System {
   const registry = options.registry ?? new ScriptRegistry();
   const running = new Map<Entity, ScriptRuntime>();
+  const inlineFactories = new Map<string, ScriptFactory>();
+  const failed = new Map<Entity, string>();
+  const reported = new Set<string>();
+
+  const reportOnce = (
+    ctx: SystemContext,
+    entity: Entity,
+    key: string,
+    message: string,
+    level: "warn" | "error" = "error",
+  ): void => {
+    const reportKey = `${entity}:${key}:${message}`;
+    if (reported.has(reportKey)) return;
+    reported.add(reportKey);
+    if (level === "warn") ctx.diagnostics.warn(message, { entity });
+    else ctx.diagnostics.error(message, { entity });
+  };
 
   return defineSystem("scripts", (ctx) => {
     const world = ctx.scene.world;
@@ -85,29 +112,69 @@ export function scriptSystem(options: ScriptSystemOptions = {}): System {
       if (!world.isAlive(entity)) {
         runtime.behaviour.destroy?.(contextFor(entity, runtime.props));
         running.delete(entity);
+        failed.delete(entity);
       }
     }
 
-    // 2. Start new scripts, or restart scripts whose name changed.
+    // 2. Start new scripts, or restart scripts whose source/name changed.
     for (const entity of world.query(Script)) {
       const component = world.require(entity, Script);
+      const source = component.source ?? "";
+      const inline = source.trim().length > 0;
+      const key = inline ? `inline:${source}` : `name:${component.name}`;
       const existing = running.get(entity);
-      if (existing && existing.name === component.name) continue;
+      if (existing && existing.key === key) continue;
+      if (failed.get(entity) === key) continue;
       if (existing) {
         existing.behaviour.destroy?.(contextFor(entity, existing.props));
         running.delete(entity);
       }
-      if (component.name.length === 0) continue;
-      const factory = registry.factory(component.name);
+      failed.delete(entity);
+      if (!inline && component.name.length === 0) continue;
+
+      let factory: ScriptFactory | undefined;
+      if (inline) {
+        factory = inlineFactories.get(source);
+        if (!factory) {
+          try {
+            factory = compileInlineScriptFactory(source);
+            inlineFactories.set(source, factory);
+          } catch (error) {
+            reportOnce(ctx, entity, key, (error as Error).message);
+            failed.set(entity, key);
+            continue;
+          }
+        }
+      } else {
+        factory = registry.factory(component.name);
+      }
       if (!factory) {
         if (options.onMissing) options.onMissing(entity, component.name, ctx);
-        else ctx.diagnostics.warn(`script "${component.name}" is not registered`, { entity });
+        else {
+          reportOnce(
+            ctx,
+            entity,
+            key,
+            `script "${component.name}" is not registered`,
+            "warn",
+          );
+        }
+        continue;
+      }
+      let behaviour: ScriptBehaviour;
+      try {
+        behaviour = factory(component.props, entity);
+      } catch (error) {
+        reportOnce(ctx, entity, key, `could not create script: ${(error as Error).message}`);
+        failed.set(entity, key);
         continue;
       }
       running.set(entity, {
         name: component.name,
+        source,
+        key,
         props: component.props,
-        behaviour: factory(component.props, entity),
+        behaviour,
         started: false,
       });
     }
@@ -116,11 +183,25 @@ export function scriptSystem(options: ScriptSystemOptions = {}): System {
     for (const entity of [...running.keys()].sort((a, b) => a - b)) {
       const runtime = running.get(entity);
       if (!runtime || !world.isAlive(entity)) continue;
-      if (!runtime.started) {
-        runtime.started = true;
-        runtime.behaviour.start?.(contextFor(entity, runtime.props));
+      try {
+        if (!runtime.started) {
+          runtime.started = true;
+          runtime.behaviour.start?.(contextFor(entity, runtime.props));
+        }
+        runtime.behaviour.update?.(contextFor(entity, runtime.props));
+      } catch (error) {
+        // One broken behaviour must not take down Play or the exported game.
+        reportOnce(
+          ctx,
+          entity,
+          runtime.key,
+          `script ${runtime.name ? `"${runtime.name}"` : "(inline)"} failed: ${
+            (error as Error).message
+          }`,
+        );
+        failed.set(entity, runtime.key);
+        running.delete(entity);
       }
-      runtime.behaviour.update?.(contextFor(entity, runtime.props));
     }
   }, SystemOrder.script);
 }

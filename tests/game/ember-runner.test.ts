@@ -9,7 +9,7 @@
  * - the same seed and input reproduce the run exactly.
  */
 
-import { BoxCollider, Scene, snapshot, Sprite, Tag, TextLabel, Transform, vec2, Velocity } from "@ember/core";
+import { BoxCollider, snapshot, Sprite, TextLabel, Transform, vec2, Velocity } from "@ember/core";
 import { type RuntimeSession, worldDigest } from "@ember/runtime";
 import {
   buildScenes,
@@ -55,6 +55,24 @@ function teleport(runtime: RuntimeSession, entity: number, x: number, y: number)
   transform.position = vec2(x, y);
 }
 
+/** Drives one hazard contact, waiting out the grace period before returning. */
+function forceHit(runtime: RuntimeSession): void {
+  const state = stateOf(runtime);
+  const player = playerOf(runtime);
+  const [hazard] = runtime.api.entitiesWithTag(HAZARD_TAG);
+  assert(hazard !== undefined, "a hazard exists");
+  const hazardPosition = positionOf(runtime, hazard);
+  teleport(runtime, player, hazardPosition.x, hazardPosition.y);
+  runtime.step(DT);
+  if (state.status === "playing") runtime.run(60, DT);
+}
+
+/** Repeats hazard contact until the run ends. */
+function endRun(runtime: RuntimeSession): void {
+  const state = stateOf(runtime);
+  for (let attempt = 0; attempt < 6 && state.status === "playing"; attempt++) forceHit(runtime);
+}
+
 function positionOf(runtime: RuntimeSession, entity: number): { x: number; y: number } {
   const transform = runtime.scene.world.get(entity, Transform);
   assert(transform !== undefined, "entity has a transform");
@@ -90,23 +108,25 @@ Deno.test("game/ember-runner title screen is a menu, not a level", () => {
   near(runtime.scene.resources.gravity.y, 0, 1e-12, "menu is gravity-free");
 });
 
-for (const spec of LEVEL_SPECS) Deno.test(`game/ember-runner level spec is self-consistent: ${spec.name}`, () => {
-  assertEqual(spec.width > 0 && spec.height > 0, true, `${spec.name} has a size`);
-  assert(spec.timeLimit > 0, `${spec.name} has a time limit`);
-  assert(spec.platforms.length > 0, `${spec.name} has platforms`);
-  assert(spec.embers.length > 0, `${spec.name} has embers`);
-  assert(spec.hazards.length > 0, `${spec.name} has hazards`);
-  assert(spec.gate[0] < spec.width, `${spec.name} gate is inside the level`);
-  assert(spec.gate[1] < spec.groundY, `${spec.name} gate stands above the ground line`);
-  for (const [x, y] of spec.embers) {
-    assert(x > 0 && x < spec.width, `${spec.name} ember x in bounds: ${x}`);
-    assert(y > 0 && y < spec.groundY, `${spec.name} ember y above ground: ${y}`);
-  }
-  for (const [x, y, w] of spec.platforms) {
-    assert(x - w / 2 >= 0 && x + w / 2 <= spec.width, `${spec.name} platform inside the level`);
-    assert(y < spec.groundY, `${spec.name} platform above ground`);
-  }
-});
+for (const spec of LEVEL_SPECS) {
+  Deno.test(`game/ember-runner level spec is self-consistent: ${spec.name}`, () => {
+    assertEqual(spec.width > 0 && spec.height > 0, true, `${spec.name} has a size`);
+    assert(spec.timeLimit > 0, `${spec.name} has a time limit`);
+    assert(spec.platforms.length > 0, `${spec.name} has platforms`);
+    assert(spec.embers.length > 0, `${spec.name} has embers`);
+    assert(spec.hazards.length > 0, `${spec.name} has hazards`);
+    assert(spec.gate[0] < spec.width, `${spec.name} gate is inside the level`);
+    assert(spec.gate[1] < spec.groundY, `${spec.name} gate stands above the ground line`);
+    for (const [x, y] of spec.embers) {
+      assert(x > 0 && x < spec.width, `${spec.name} ember x in bounds: ${x}`);
+      assert(y > 0 && y < spec.groundY, `${spec.name} ember y above ground: ${y}`);
+    }
+    for (const [x, y, w] of spec.platforms) {
+      assert(x - w / 2 >= 0 && x + w / 2 <= spec.width, `${spec.name} platform inside the level`);
+      assert(y < spec.groundY, `${spec.name} platform above ground`);
+    }
+  });
+}
 
 Deno.test("game/ember-runner level specs have unique names that lookup agrees with", () => {
   const names = LEVEL_SPECS.map((spec) => spec.name);
@@ -117,20 +137,30 @@ Deno.test("game/ember-runner level specs have unique names that lookup agrees wi
   assertEqual(levelSpec("missing"), undefined, "unknown level");
 });
 
-for (const spec of LEVEL_SPECS) Deno.test(`game/ember-runner level scene contains its spec: ${spec.name}`, () => {
-  const scene = buildScenes().get(spec.name);
-  assert(scene !== undefined, `${spec.name} exists`);
-  assertEqual(scene.entityCount > 0, true, "entities exist");
-  const runtime = createGame().createSession(spec.name);
-  assertEqual(runtime.api.entitiesWithTag(COIN_TAG).length, spec.embers.length, "ember count");
-  assertEqual(runtime.api.entitiesWithTag(HAZARD_TAG).length, spec.hazards.length, "hazard count");
-  assertEqual(runtime.api.entitiesWithTag(GOAL_TAG).length, 1, "one gate");
-  assertEqual(runtime.api.entitiesWithTag(PLAYER_TAG).length, 1, "one player");
-  near(scene.resources.gravity.y, 1900, 1e-9, "level gravity");
-  assertEqual(scene.resources.camera.bounds?.w, spec.width, "camera bounds follow the level");
-  assertEqual(scene.resources.camera.follow, runtime.api.entitiesWithTag(PLAYER_TAG)[0], "camera follows the player");
-  assertEqual(scene.metadata.timeLimit, spec.timeLimit, "time limit in metadata");
-});
+for (const spec of LEVEL_SPECS) {
+  Deno.test(`game/ember-runner level scene contains its spec: ${spec.name}`, () => {
+    const scene = buildScenes().get(spec.name);
+    assert(scene !== undefined, `${spec.name} exists`);
+    assertEqual(scene.entityCount > 0, true, "entities exist");
+    const runtime = createGame().createSession(spec.name);
+    assertEqual(runtime.api.entitiesWithTag(COIN_TAG).length, spec.embers.length, "ember count");
+    assertEqual(
+      runtime.api.entitiesWithTag(HAZARD_TAG).length,
+      spec.hazards.length,
+      "hazard count",
+    );
+    assertEqual(runtime.api.entitiesWithTag(GOAL_TAG).length, 1, "one gate");
+    assertEqual(runtime.api.entitiesWithTag(PLAYER_TAG).length, 1, "one player");
+    near(scene.resources.gravity.y, 1900, 1e-9, "level gravity");
+    assertEqual(scene.resources.camera.bounds?.w, spec.width, "camera bounds follow the level");
+    assertEqual(
+      scene.resources.camera.follow,
+      runtime.api.entitiesWithTag(PLAYER_TAG)[0],
+      "camera follows the player",
+    );
+    assertEqual(scene.metadata.timeLimit, spec.timeLimit, "time limit in metadata");
+  });
+}
 
 Deno.test("game/ember-runner every sprite texture used by the game has a texture source", () => {
   const sources = textureSources;
@@ -170,14 +200,14 @@ Deno.test("game/ember-runner holding right moves the runner right", () => {
   const before = positionOf(runtime, player).x;
   runtime.run(60, DT, Array(60).fill(snapshot({ held: ["ArrowRight"] })));
   const after = positionOf(runtime, player).x;
-  assert(after > before + 50, `moved right: ${before} -> ${after}`);
-  // Steady cruise: never stalls, never teleports. The shipped tuning cruises at ~68 px/s
-  // even though the player script targets 260 (grounded friction is applied every step).
+  assert(after > before + 180, `moved right: ${before} -> ${after}`);
+  // The script targets 260 px/s and the body no longer bleeds speed through per-step
+  // friction, so the runner holds that speed once it has accelerated.
   const velocity = runtime.scene.world.require(player, Velocity);
-  assert(velocity.x > 40 && velocity.x < 260, `cruising speed: ${velocity.x}`);
+  near(velocity.x, 260, 1, "cruising speed");
   const second = positionOf(runtime, player).x;
-  runtime.run(60, DT, Array(60).fill(snapshot({ held: ["ArrowRight"] })));
-  assert(positionOf(runtime, player).x > second + 50, "keeps moving in the second interval");
+  runtime.run(20, DT, Array(20).fill(snapshot({ held: ["ArrowRight"] })));
+  assert(positionOf(runtime, player).x > second + 70, "keeps travelling right");
 });
 
 Deno.test("game/ember-runner holding left moves the runner left", () => {
@@ -207,14 +237,14 @@ Deno.test("game/ember-runner jumping lifts the player and gravity brings it back
   const ground = positionOf(runtime, player).y;
   runtime.step(DT, snapshot({ held: ["Space"], pressed: ["Space"] }));
   const velocity = runtime.scene.world.require(player, Velocity);
-  // The body's maxSpeed (620) clamps the script's 780 jump, so the launch speed is 620.
-  assert(velocity.y < -500, `jump sets an upward velocity: ${velocity.y}`);
+  // The body's maxSpeed (1600) now clears the script's 780 impulse, so the launch is full.
+  assert(velocity.y < -700, `jump sets an upward velocity: ${velocity.y}`);
   let highest = ground;
-  for (let frame = 0; frame < 20; frame++) {
+  for (let frame = 0; frame < 40; frame++) {
     runtime.step(DT);
     highest = Math.min(highest, positionOf(runtime, player).y);
   }
-  assert(ground - highest > 80, `rose at least 80px: ${ground - highest}`);
+  assert(ground - highest > 130, `rose at least 130px: ${ground - highest}`);
   runtime.run(60, DT);
   near(positionOf(runtime, player).y, ground, 2, "landed again");
 });
@@ -289,7 +319,7 @@ Deno.test("game/ember-runner a hazard costs a life and knocks the player back", 
   assertEqual(events[0].lives, 2, "event lives");
 });
 
-Deno.test("game/ember-runner consecutive contact steps each cost a life", () => {
+Deno.test("game/ember-runner a hazard hit grants a grace period", () => {
   const runtime = session();
   const state = stateOf(runtime);
   const player = playerOf(runtime);
@@ -299,7 +329,16 @@ Deno.test("game/ember-runner consecutive contact steps each cost a life", () => 
   runtime.step(DT);
   teleport(runtime, player, hazardPosition.x, hazardPosition.y);
   runtime.step(DT);
-  assertEqual(state.lives, 1, "two overlapping steps cost two lives");
+  assertEqual(state.lives, 2, "two overlapping steps cost only one life");
+  assertEqual(state.hits, 1, "one hit recorded");
+
+  // The grace period ends after ~0.9s; sustained contact then costs the next life.
+  for (let frame = 0; frame < 60; frame++) {
+    const hazardNow = positionOf(runtime, hazard);
+    teleport(runtime, player, hazardNow.x, hazardNow.y);
+    runtime.step(DT);
+  }
+  assertEqual(state.lives, 1, "a second hit lands after the grace period");
   assertEqual(state.hits, 2, "two hits recorded");
 });
 
@@ -307,17 +346,10 @@ Deno.test("game/ember-runner the run ends when the lives are gone", () => {
   const runtime = session();
   const state = stateOf(runtime);
   const player = playerOf(runtime);
-  const [hazard] = runtime.api.entitiesWithTag(HAZARD_TAG);
-  const hazardPosition = positionOf(runtime, hazard);
-  for (let hit = 0; hit < 3; hit++) {
-    teleport(runtime, player, hazardPosition.x, hazardPosition.y);
-    runtime.step(DT);
-    // Move clear so the next hit is a fresh contact.
-    teleport(runtime, player, hazardPosition.x, hazardPosition.y - 400);
-    runtime.step(DT);
-  }
+  assert(player !== undefined, "player exists");
+  endRun(runtime);
   assertEqual(state.lives, 0, "lives");
-  assertEqual(state.hits, 3, "hits");
+  assert(state.hits >= 3, `hits: ${state.hits}`);
   assertEqual(state.status, "dead", "status");
   assertEqual(state.message, "the ember went out", "message");
   assertEqual(state.best >= state.score, true, "best recorded");
@@ -489,15 +521,7 @@ Deno.test("game/ember-runner the HUD reports score, lives and time", () => {
 Deno.test("game/ember-runner the HUD turns red after a loss and green after a win", () => {
   const lost = session();
   const lostState = stateOf(lost);
-  const lostPlayer = playerOf(lost);
-  const [hazard] = lost.api.entitiesWithTag(HAZARD_TAG);
-  const hazardPosition = positionOf(lost, hazard);
-  for (let hit = 0; hit < 3; hit++) {
-    teleport(lost, lostPlayer, hazardPosition.x, hazardPosition.y);
-    lost.step(DT);
-    teleport(lost, lostPlayer, hazardPosition.x, hazardPosition.y - 400);
-    lost.step(DT);
-  }
+  endRun(lost);
   assertEqual(lostState.status, "dead", "dead");
   const lostHud = lost.scene.world.require(lost.scene.findByName("hud")!, TextLabel);
   assertEqual(lostHud.color, "#e5484d", "red on death");
@@ -540,30 +564,36 @@ Deno.test("game/ember-runner a different seed produces a different run", () => {
   assert(worldDigest(first.scene.world) !== worldDigest(second.scene.world), "worlds diverge");
 });
 
-Deno.test("game/ember-runner an input-driven run advances, then dies at the first hazard", () => {
+Deno.test("game/ember-runner an input-only autopilot completes level 1", () => {
   const runtime = session(LEVEL_ONE, "playthrough");
   const state = stateOf(runtime);
   const player = playerOf(runtime);
 
-  // Walk right and jump every 40 frames for 15 simulated seconds. This is a real
-  // input-driven playthrough: no teleports, only snapshots.
+  // Autopilot: hold right, tap jump whenever a hazard is within 150px ahead or below.
+  // Only input snapshots drive the run — nothing is teleported or mutated.
   const script: ReturnType<typeof snapshot>[] = [];
-  for (let frame = 0; frame < 900; frame++) {
-    const held = ["ArrowRight"];
-    if (frame % 40 === 0) held.push("Space");
-    script.push(snapshot({ held, pressed: frame % 40 === 0 ? ["Space"] : [] }));
+  for (let frame = 0; frame < 1800 && state.status === "playing"; frame++) {
+    const p = positionOf(runtime, player);
+    const ahead = runtime.api.entitiesWithTag(HAZARD_TAG).some((entity) => {
+      const hazard = positionOf(runtime, entity);
+      return hazard.x > p.x - 20 && hazard.x - p.x < 150 && Math.abs(hazard.y - p.y) < 110;
+    });
+    script.push(
+      snapshot({
+        held: ahead ? ["ArrowRight", "Space"] : ["ArrowRight"],
+        pressed: ahead ? ["Space"] : [],
+      }),
+    );
+    runtime.step(DT, script.at(-1));
   }
-  runtime.run(script.length, DT, script);
 
-  // Observed shipped behaviour: the runner reaches the first hazard (x≈520) in ~2.5s and
-  // loses all three lives there, because contact has no invulnerability window. The test
-  // pins the run down as a real, input-only playthrough rather than a teleport shortcut.
-  assert(state.time > 2, `simulated a real stretch of play: ${state.time}`);
-  assert(positionOf(runtime, player).x > 400, "the runner travelled to the first hazard");
-  assert(state.score > 0, "survival score accrued");
-  assertEqual(state.status, "dead", "the careless walk ends at the spikes");
-  assertEqual(state.hits, 3, "three contact steps cost the three lives");
+  assertEqual(state.status, "won", `run finished: ${state.message}`);
+  assert(state.message.startsWith("gate reached!"), `win message: ${state.message}`);
+  assert(state.time < 20, `level completed in ${state.time.toFixed(1)}s`);
+  assert(state.coins > 0, `collected embers on the way: ${state.coins}`);
+  assert(state.score > 200, `score includes bonuses: ${state.score}`);
   assertEqual(state.attempts, 1, "no restarts");
+  assert(positionOf(runtime, player).x > 2200, "the runner reached the gate");
 });
 
 Deno.test("game/ember-runner a teleport-to-gate playthrough wins with a full run state", () => {

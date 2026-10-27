@@ -5,17 +5,17 @@
 import { assert, assertAlmostEquals, assertEquals, assertThrows } from "@std/assert";
 import {
   Diagnostics,
+  emptySnapshot,
   Name,
   Parent,
   Scene,
+  snapshot,
   Tag,
   Transform,
-  Velocity,
-  emptySnapshot,
-  snapshot,
   vec2,
+  Velocity,
 } from "@ember/core";
-import { RuntimeSession, defineSystem } from "@ember/runtime";
+import { defineSystem, RuntimeSession } from "@ember/runtime";
 
 const DT = 1 / 60;
 
@@ -84,7 +84,12 @@ Deno.test("a system receives the live scene, dt, time and frame", () => {
     scene,
     systems: [
       defineSystem("probe", (ctx) => {
-        seen.push({ dt: ctx.dt, time: ctx.time, frame: ctx.frame, entities: ctx.scene.entityCount });
+        seen.push({
+          dt: ctx.dt,
+          time: ctx.time,
+          frame: ctx.frame,
+          entities: ctx.scene.entityCount,
+        });
       }),
     ],
   });

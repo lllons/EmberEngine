@@ -120,9 +120,22 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
     while (consolePanel.body.childElementCount > 300) consolePanel.body.firstElementChild?.remove();
   };
 
+  // The editing camera and view toggles are declared before the session because the
+  // session's change events run during construction and read them (a TDZ crash otherwise).
+  const startScene = scenes.get(info.described.start ?? "") ??
+    (scenes.values().next().value as Scene);
+  let showColliders = true;
+  let editingCamera: Camera2DState = {
+    position: { ...startScene.resources.camera.position },
+    zoom: 1,
+    smoothing: 0,
+    bounds: null,
+    follow: null,
+  };
+
   const session = new EditorSession({
     game,
-    scene: scenes.values().next().value as Scene,
+    scene: startScene,
     sceneName: info.described.start ?? scenes.keys().next().value as string,
     mount: viewportMount,
     resolveTexture: textures ? textures.resolver() : undefined,
@@ -138,17 +151,7 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
     },
   });
 
-  const startScene = scenes.get(session.sceneName) ?? (scenes.values().next().value as Scene);
   session.setScene(startScene, session.sceneName);
-
-  let showColliders = true;
-  let editingCamera: Camera2DState = {
-    position: { ...startScene.resources.camera.position },
-    zoom: 1,
-    smoothing: 0,
-    bounds: null,
-    follow: null,
-  };
 
   function updateStatus(reason: string): void {
     const parts = [
@@ -185,6 +188,8 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
   let lastPickList: ReturnType<typeof buildDrawList> | null = null;
 
   function drawSelectionMarker(): void {
+    // `ctx` is checked once above, but closures do not keep that narrowing.
+    if (!ctx) return;
     const entity = session.selection;
     if (entity === null || !session.scene.world.isAlive(entity)) return;
     const transform = session.scene.world.get(entity, Transform);

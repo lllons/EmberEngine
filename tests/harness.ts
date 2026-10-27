@@ -51,9 +51,9 @@ export function assertThrows(
       }
     } else if (match && !(error instanceof match)) {
       throw new Error(
-        `${label}: threw ${(error as Error)?.name ?? typeof error} "${message}", expected ${
-          match.name
-        }`,
+        `${label}: threw ${
+          (error as Error)?.name ?? typeof error
+        } "${message}", expected ${match.name}`,
       );
     }
   }

@@ -39,7 +39,9 @@ Deno.test("runtime/game exposes id, title and a default version", () => {
 });
 
 Deno.test("runtime/game constructor registers the declared scenes in order", () => {
-  const game = new Game(definition({ scenes: { one: () => level("one"), two: () => level("two") } }));
+  const game = new Game(
+    definition({ scenes: { one: () => level("one"), two: () => level("two") } }),
+  );
   assertEqual(game.sceneNames(), ["one", "two"], "load order");
   assertEqual(game.sceneCount, 2, "count");
   assert(game.hasScene("one") && game.hasScene("two"), "both registered");
@@ -67,7 +69,9 @@ Deno.test("runtime/game removeScene reports whether it removed anything", () => 
 });
 
 Deno.test("runtime/game startScene prefers the declared start", () => {
-  const game = new Game(definition({ scenes: { a: () => level("a"), b: () => level("b") }, start: "b" }));
+  const game = new Game(
+    definition({ scenes: { a: () => level("a"), b: () => level("b") }, start: "b" }),
+  );
   assertEqual(game.startScene, "b", "declared start");
 });
 
@@ -126,7 +130,11 @@ Deno.test("runtime/game viewport override replaces every scene's viewport", () =
 
 Deno.test("runtime/game keeps a scene's own viewport without an override", () => {
   const game = new Game(definition());
-  assertEqual(game.createScene("level").resources.viewport, { width: 320, height: 240 }, "scene value");
+  assertEqual(
+    game.createScene("level").resources.viewport,
+    { width: 320, height: 240 },
+    "scene value",
+  );
 });
 
 Deno.test("runtime/game scripts() includes the engine defaults", () => {
@@ -177,7 +185,9 @@ Deno.test("runtime/game createSession uses the start scene and logs it", () => {
   const game = new Game(definition());
   const session = game.createSession();
   assertEqual(session.scene.name, "level", "start scene");
-  const started = session.diagnostics.records.find((record) => record.message === "session started");
+  const started = session.diagnostics.records.find((record) =>
+    record.message === "session started"
+  );
   assertEqual(started?.data, { game: "test-game", scene: "level" }, "diagnostics record");
 });
 
@@ -241,7 +251,9 @@ Deno.test("runtime/game createHost wraps the session it creates", () => {
 });
 
 Deno.test("runtime/game describe() summarizes the definition", () => {
-  const game = new Game(definition({ scenes: { a: () => level("a"), b: () => level("b") }, start: "b" }));
+  const game = new Game(
+    definition({ scenes: { a: () => level("a"), b: () => level("b") }, start: "b" }),
+  );
   const described = game.describe();
   assertEqual(described.id, "test-game", "id");
   assertEqual(described.title, "Test Game", "title");
@@ -277,7 +289,9 @@ Deno.test("runtime/game loadSceneDirectory skips a corrupt file and warns", asyn
     await Deno.writeTextFile(joinPath(directory, "bad.emberscene"), "{ this is not json }");
     const warnings: string[] = [];
     const game = new Game({ id: "disk", title: "Disk" });
-    const loaded = await game.loadSceneDirectory(directory, { onWarning: (message) => warnings.push(message) });
+    const loaded = await game.loadSceneDirectory(directory, {
+      onWarning: (message) => warnings.push(message),
+    });
     assertEqual(loaded, ["good"], "only the readable scene is loaded");
     assertEqual(warnings.length, 1, "one warning");
     assert(warnings[0].includes("bad.emberscene"), `warning names the file: ${warnings[0]}`);

@@ -146,6 +146,10 @@ export function registerRunnerScripts(registry: ScriptRegistry): ScriptRegistry 
     const speed = numberProp(props, "speed", 90);
     let direction = numberProp(props, "direction", 1) >= 0 ? 1 : -1;
     let originX: number | null = null;
+    // Contact lasts several steps while the knockback separates the bodies. Without this
+    // grace period a single brush with a spike drains every life in three frames.
+    const hitCooldown = 0.9;
+    let nextHitAt = 0;
 
     return {
       start(ctx) {
@@ -171,6 +175,8 @@ export function registerRunnerScripts(registry: ScriptRegistry): ScriptRegistry 
         const playerRect = colliderWorldRect(world, player);
         const ownRect = colliderWorldRect(world, ctx.entity);
         if (!playerRect || !ownRect || !rectIntersects(playerRect, ownRect)) return;
+        if (ctx.time < nextHitAt) return;
+        nextHitAt = ctx.time + hitCooldown;
 
         // A hit costs a life and knocks the player back; it never resolves as physics.
         state.lives -= 1;

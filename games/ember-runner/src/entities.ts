@@ -59,8 +59,13 @@ export function createPlayer(scene: Scene, x: number, y: number, options: Player
   world.add(entity, RigidBody, {
     type: "dynamic",
     gravityScale: 1,
-    friction: 0.35,
-    maxSpeed: 620,
+    // The runtime applies a body's friction on *every* grounded contact step, so any
+    // non-zero value caps the runner far below its scripted speed. Stopping is the player
+    // script's job (it damps to zero when no direction key is held).
+    friction: 0,
+    // Must stay above the script's jump impulse (780), otherwise the launch is clamped and
+    // the platforms the levels are built around become unreachable.
+    maxSpeed: 1600,
     restitution: 0,
     grounded: false,
   });

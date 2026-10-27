@@ -7,7 +7,8 @@
  *   ember info [game]                  describe a game (scenes, systems, scripts)
  *   ember scenes [game] [--write]      list (or bake) scene files
  *   ember play [game] [--headless s]   run the game (browser player or headless run)
- *   ember editor [game]                open the editor UI for a game
+ *   ember editor [game]                open the native editor window for a game
+ *   ember studio [game]                open the browser studio editor for a game
  *   ember export [game] [--verify]     build dist/<game>.exe and optionally run it
  *   ember test [game] [--seconds n]    headless play-through of every scene
  *
@@ -43,7 +44,8 @@ export function usage(): string {
     "  info [game]                     show the game's scenes, systems and scripts",
     "  scenes [game] [--write]         list scene files, or bake them from level code",
     "  play [game] [--headless <s>]    run the game (browser player or headless run)",
-    "  editor [game] [--port n]        open the editor UI",
+    "  editor [game]                   open the native editor window",
+    "  studio [game] [--port n]        open the browser studio editor",
     "  export [game] [--verify]        build dist/<game>.exe and optionally launch it",
     "  test [game] [--seconds <s>]     headless play-through of every scene",
     "",
@@ -73,7 +75,16 @@ export interface CliOptions {
 }
 
 export function parseCliArgs(args: readonly string[]): CliOptions {
-  const known = new Set(["info", "scenes", "play", "editor", "export", "test", "help"]);
+  const known = new Set([
+    "info",
+    "scenes",
+    "play",
+    "editor",
+    "studio",
+    "export",
+    "test",
+    "help",
+  ]);
   const first = args[0];
   const options: CliOptions = {
     command: first && !first.startsWith("-") && known.has(first) ? first : "help",
@@ -387,6 +398,35 @@ export async function commandEditor(options: CliOptions, log = console.log): Pro
 }
 
 // ---------------------------------------------------------------------------
+// studio (browser editor)
+// ---------------------------------------------------------------------------
+
+export async function commandStudio(options: CliOptions, log = console.log): Promise<number> {
+  const loaded = await loadGame(options.game);
+  const { startStudio } = await import("../studio/mod.ts");
+  const studio = await startStudio({
+    descriptor: loaded.descriptor,
+    workspaceRoot: Deno.cwd(),
+    sceneSource: loaded.sceneSource,
+    port: options.port ?? 0,
+    onLog: (line) => log(`  ${line}`),
+  });
+  log(`${loaded.descriptor.title} — Ember Studio`);
+  log(`folder:  ${loaded.descriptor.directory}`);
+  log(`scenes:  ${loaded.game.sceneNames().join(", ")} (from ${loaded.sceneSource})`);
+  log(`serving at ${studio.url}`);
+  if (options.open) {
+    const opened = await openInBrowser(studio.url);
+    log(opened ? "opened the default browser" : `open ${studio.url} in a browser`);
+  }
+  log("press Ctrl+C to stop");
+  await new Promise<void>(() => {
+    // The editor serves until interrupted; the window/browser tab is the UI.
+  });
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
 // entry
 // ---------------------------------------------------------------------------
 
@@ -413,6 +453,8 @@ export async function runCli(args: readonly string[], log = console.log): Promis
         return await commandPlay(options, log);
       case "editor":
         return await commandEditor(options, log);
+      case "studio":
+        return await commandStudio(options, log);
       case "export":
         return await commandExport(options, log);
       case "test":

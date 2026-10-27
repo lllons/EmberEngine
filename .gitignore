@@ -7,6 +7,9 @@ dist/
 *.o
 *.a
 
+# Local editor projects (default save location for an empty project)
+projects/
+
 # Freebuff local agent state (databases, project metadata)
 .freebuff/
 

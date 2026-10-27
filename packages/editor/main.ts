@@ -1,12 +1,12 @@
 /**
  * `EmberEngine.exe` — the standalone native editor.
  *
- * The compiled binary embeds the sample game (Ember Runner) so it starts with real scenes,
- * loads any authored `scenes/*.emberscene` files next to the project, and saves edits there.
- * No browser, server or webview is involved.
+ * A fresh launch opens an empty project. Examples (scripting playground, 3D showcase and
+ * Ember Runner) are available from the Examples menu; authored scenes are written under
+ * `projects/untitled/scenes`. No browser, server or webview is involved.
  *
  * Usage:
- *   EmberEngine.exe                         open the built-in project
+ *   EmberEngine.exe                         open the empty project
  *   EmberEngine.exe --game <dir>            open another game (source runs only)
  *   EmberEngine.exe --scenes <dir>          choose where authored scenes live
  *   EmberEngine.exe --debug                 keep the console window visible
@@ -14,7 +14,7 @@
 
 import { dirname, isAbsolute, join } from "node:path";
 import { listGameSceneFiles, loadGame } from "@ember/gameloader";
-import { createGame } from "../../games/ember-runner/src/main.ts";
+import { EDITOR_EXAMPLES, createEmptyGame } from "./examples.ts";
 import { runNativeEditor } from "./native/app.ts";
 
 interface LaunchArgs {
@@ -54,13 +54,17 @@ function resolvePath(path: string): string {
   return isAbsolute(path) ? path : join(Deno.cwd(), path);
 }
 
-/** Authored scenes live with the sample game when run from the repo, else beside the exe. */
-async function defaultSceneDirectory(): Promise<string> {
+/**
+ * A new project lives under `projects/untitled` in the repository, or beside the compiled
+ * executable. Example scenes are written separately under `examples/<id>/scenes` so the
+ * empty project stays empty across launches.
+ */
+async function defaultProjectDirectory(): Promise<string> {
   const cwd = Deno.cwd();
   if (await isFile(join(cwd, "games", "ember-runner", "game.json"))) {
-    return join(cwd, "games", "ember-runner", "scenes");
+    return join(cwd, "projects", "untitled");
   }
-  return join(dirname(Deno.execPath()), "scenes");
+  return join(dirname(Deno.execPath()), "projects", "untitled");
 }
 
 async function launch(argv: readonly string[]): Promise<void> {
@@ -77,16 +81,23 @@ async function launch(argv: readonly string[]): Promise<void> {
     await runNativeEditor({
       game: loaded.game,
       sceneDirectory: loaded.descriptor.scenesDirectory,
+      examplesRoot: join(loaded.descriptor.directory, "examples"),
+      examples: EDITOR_EXAMPLES,
       title: loaded.descriptor.title,
       savedScenes: files.map((file) => file.name),
     });
     return;
   }
 
+  const projectDirectory = args.scenes
+    ? dirname(resolvePath(args.scenes))
+    : await defaultProjectDirectory();
   await runNativeEditor({
-    game: createGame(),
-    sceneDirectory: args.scenes ? resolvePath(args.scenes) : await defaultSceneDirectory(),
-    title: "Ember Runner",
+    game: createEmptyGame(),
+    sceneDirectory: args.scenes ? resolvePath(args.scenes) : join(projectDirectory, "scenes"),
+    examplesRoot: join(projectDirectory, "examples"),
+    examples: EDITOR_EXAMPLES,
+    title: "Untitled Project",
   });
 }
 

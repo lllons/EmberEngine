@@ -3,7 +3,15 @@
  * props are read safely. Expectations come from the documented registry contract.
  */
 
-import { defaultScripts, defineScript, numberProp, prop, ScriptRegistry, script, stringProp } from "@ember/runtime";
+import {
+  defaultScripts,
+  defineScript,
+  numberProp,
+  prop,
+  script,
+  ScriptRegistry,
+  stringProp,
+} from "@ember/runtime";
 import { assert, assertEqual, assertThrows, table } from "../../harness.ts";
 
 /** One created behaviour, recorded so assertions can inspect what the factory received. */
@@ -43,7 +51,11 @@ Deno.test("runtime/scripting define rejects a duplicate name", () => {
 
 Deno.test("runtime/scripting define rejects an empty name", () => {
   const registry = new ScriptRegistry();
-  assertThrows(() => registry.define("", loggingFactory("x", [])), /must not be empty/, "empty name");
+  assertThrows(
+    () => registry.define("", loggingFactory("x", [])),
+    /must not be empty/,
+    "empty name",
+  );
 });
 
 Deno.test("runtime/scripting override replaces an existing definition", () => {
@@ -127,36 +139,72 @@ Deno.test("runtime/scripting defineScript can target a private registry", () => 
   assert(!defaultScripts.has("private"), "default registry untouched");
 });
 
-table("runtime/scripting prop enforces the fallback's type", [
-  { label: "number passes", props: { speed: 12 }, key: "speed", fallback: 1, expected: 12 },
-  { label: "string for a number falls back", props: { speed: "12" }, key: "speed", fallback: 1, expected: 1 },
-  { label: "missing key falls back", props: {}, key: "speed", fallback: 1, expected: 1 },
-  { label: "null falls back", props: { speed: null }, key: "speed", fallback: 1, expected: 1 },
-  { label: "string passes", props: { mode: "idle" }, key: "mode", fallback: "run", expected: "idle" },
-  { label: "number for a string falls back", props: { mode: 3 }, key: "mode", fallback: "run", expected: "run" },
-  { label: "boolean passes", props: { flag: false }, key: "flag", fallback: true, expected: false },
-] as const, (row) => {
-  assertEqual(prop(row.props, row.key, row.fallback), row.expected, row.label);
-});
+table(
+  "runtime/scripting prop enforces the fallback's type",
+  [
+    { label: "number passes", props: { speed: 12 }, key: "speed", fallback: 1, expected: 12 },
+    {
+      label: "string for a number falls back",
+      props: { speed: "12" },
+      key: "speed",
+      fallback: 1,
+      expected: 1,
+    },
+    { label: "missing key falls back", props: {}, key: "speed", fallback: 1, expected: 1 },
+    { label: "null falls back", props: { speed: null }, key: "speed", fallback: 1, expected: 1 },
+    {
+      label: "string passes",
+      props: { mode: "idle" },
+      key: "mode",
+      fallback: "run",
+      expected: "idle",
+    },
+    {
+      label: "number for a string falls back",
+      props: { mode: 3 },
+      key: "mode",
+      fallback: "run",
+      expected: "run",
+    },
+    {
+      label: "boolean passes",
+      props: { flag: false },
+      key: "flag",
+      fallback: true,
+      expected: false,
+    },
+  ] as const,
+  (row) => {
+    assertEqual(prop(row.props, row.key, row.fallback), row.expected, row.label);
+  },
+);
 
-table("runtime/scripting numberProp accepts only finite numbers", [
-  { label: "finite", props: { x: 2.5 }, expected: 2.5 },
-  { label: "zero", props: { x: 0 }, expected: 0 },
-  { label: "negative", props: { x: -4 }, expected: -4 },
-  { label: "NaN", props: { x: Number.NaN }, expected: 9 },
-  { label: "Infinity", props: { x: Number.POSITIVE_INFINITY }, expected: 9 },
-  { label: "string", props: { x: "2.5" }, expected: 9 },
-  { label: "missing", props: {}, expected: 9 },
-] as const, (row) => {
-  assertEqual(numberProp(row.props, "x", 9), row.expected, row.label);
-});
+table(
+  "runtime/scripting numberProp accepts only finite numbers",
+  [
+    { label: "finite", props: { x: 2.5 }, expected: 2.5 },
+    { label: "zero", props: { x: 0 }, expected: 0 },
+    { label: "negative", props: { x: -4 }, expected: -4 },
+    { label: "NaN", props: { x: Number.NaN }, expected: 9 },
+    { label: "Infinity", props: { x: Number.POSITIVE_INFINITY }, expected: 9 },
+    { label: "string", props: { x: "2.5" }, expected: 9 },
+    { label: "missing", props: {}, expected: 9 },
+  ] as const,
+  (row) => {
+    assertEqual(numberProp(row.props, "x", 9), row.expected, row.label);
+  },
+);
 
-table("runtime/scripting stringProp accepts only strings", [
-  { label: "string", props: { s: "go" }, expected: "go" },
-  { label: "empty string is kept", props: { s: "" }, expected: "" },
-  { label: "number", props: { s: 1 }, expected: "fallback" },
-  { label: "object", props: { s: {} }, expected: "fallback" },
-  { label: "missing", props: {}, expected: "fallback" },
-] as const, (row) => {
-  assertEqual(stringProp(row.props, "s", "fallback"), row.expected, row.label);
-});
+table(
+  "runtime/scripting stringProp accepts only strings",
+  [
+    { label: "string", props: { s: "go" }, expected: "go" },
+    { label: "empty string is kept", props: { s: "" }, expected: "" },
+    { label: "number", props: { s: 1 }, expected: "fallback" },
+    { label: "object", props: { s: {} }, expected: "fallback" },
+    { label: "missing", props: {}, expected: "fallback" },
+  ] as const,
+  (row) => {
+    assertEqual(stringProp(row.props, "s", "fallback"), row.expected, row.label);
+  },
+);

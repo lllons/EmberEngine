@@ -138,16 +138,17 @@ export class GdiCanvas {
     align: "left" | "center" | "right" = "left",
     baseline: "top" | "middle" | "bottom" = "top",
     bold = false,
+    mono = false,
   ): void {
     if (value.length === 0) return;
-    const width = this.measureText(value, size, bold);
+    const width = this.measureText(value, size, bold, mono);
     let left = x;
     if (align === "center") left -= width / 2;
     else if (align === "right") left -= width;
     let top = y;
     if (baseline === "middle") top -= size / 2;
     else if (baseline === "bottom") top -= size;
-    this.selectFont(size, bold);
+    this.selectFont(size, bold, mono);
     this.gdi.symbols.SetTextColor(this.hdc, colorRef(color));
     const buffer = wide(value);
     this.gdi.symbols.TextOutW(
@@ -159,9 +160,9 @@ export class GdiCanvas {
     );
   }
 
-  measureText(value: string, size: number, bold = false): number {
+  measureText(value: string, size: number, bold = false, mono = false): number {
     if (value.length === 0) return 0;
-    this.selectFont(size, bold);
+    this.selectFont(size, bold, mono);
     const buffer = wide(value);
     const measured = new Uint8Array(8);
     this.gdi.symbols.GetTextExtentPoint32W(
@@ -232,9 +233,9 @@ export class GdiCanvas {
     this.gdi.symbols.SelectObject(this.hdc, this.pen(color, lineWidth));
   }
 
-  private selectFont(size: number, bold: boolean): void {
+  private selectFont(size: number, bold: boolean, mono = false): void {
     const height = Math.max(8, Math.round(size));
-    const key = `${height}:${bold ? 600 : 400}`;
+    const key = `${height}:${bold ? 600 : 400}:${mono ? "mono" : "ui"}`;
     let font = this.fonts.get(key);
     if (!font) {
       font = this.gdi.symbols.CreateFontW(
@@ -251,7 +252,7 @@ export class GdiCanvas {
         0,
         5,
         0,
-        Deno.UnsafePointer.of(wide("Segoe UI")),
+        Deno.UnsafePointer.of(wide(mono ? "Consolas" : "Segoe UI")),
       );
       this.fonts.set(key, font);
     }

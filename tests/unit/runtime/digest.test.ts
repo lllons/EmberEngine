@@ -4,7 +4,14 @@
 
 import { assert, assertEquals } from "@std/assert";
 import { Scene, Transform, vec2 } from "@ember/core";
-import { fixed, hashText, sceneDigest, stableJson, worldDigest, worldDigestText } from "@ember/runtime";
+import {
+  fixed,
+  hashText,
+  sceneDigest,
+  stableJson,
+  worldDigest,
+  worldDigestText,
+} from "@ember/runtime";
 
 Deno.test("fixed rounds to six decimals", () => {
   assertEquals(fixed(1), "1.000000");

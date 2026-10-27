@@ -31,31 +31,39 @@ import { assert, assertEqual, assertThrows, near, table, vecNear } from "../../h
 
 const DT = 1 / 60;
 
-table("runtime/accumulator clampDelta", [
-  { label: "passes a small delta through", input: 0.1, max: 0.25, expected: 0.1 },
-  { label: "caps at maxDelta", input: 1, max: 0.25, expected: 0.25 },
-  { label: "caps at exactly maxDelta", input: 0.25, max: 0.25, expected: 0.25 },
-  { label: "rejects negatives", input: -5, max: 0.25, expected: 0 },
-  { label: "rejects NaN", input: Number.NaN, max: 0.25, expected: 0 },
-  { label: "rejects Infinity", input: Number.POSITIVE_INFINITY, max: 0.25, expected: 0 },
-  { label: "zero stays zero", input: 0, max: 0.25, expected: 0 },
-] as const, (row) => {
-  near(clampDelta(row.input, row.max), row.expected, 1e-12, row.label);
-});
+table(
+  "runtime/accumulator clampDelta",
+  [
+    { label: "passes a small delta through", input: 0.1, max: 0.25, expected: 0.1 },
+    { label: "caps at maxDelta", input: 1, max: 0.25, expected: 0.25 },
+    { label: "caps at exactly maxDelta", input: 0.25, max: 0.25, expected: 0.25 },
+    { label: "rejects negatives", input: -5, max: 0.25, expected: 0 },
+    { label: "rejects NaN", input: Number.NaN, max: 0.25, expected: 0 },
+    { label: "rejects Infinity", input: Number.POSITIVE_INFINITY, max: 0.25, expected: 0 },
+    { label: "zero stays zero", input: 0, max: 0.25, expected: 0 },
+  ] as const,
+  (row) => {
+    near(clampDelta(row.input, row.max), row.expected, 1e-12, row.label);
+  },
+);
 
-table("runtime/accumulator plans whole steps", [
-  { label: "below one step runs none", dt: 0.016, steps: 0, alpha: 0.96 },
-  { label: "exactly one step", dt: DT, steps: 1, alpha: 0 },
-  { label: "two and a half steps", dt: DT * 2.5, steps: 2, alpha: 0.5 },
-  { label: "three steps worth", dt: DT * 3, steps: 3, alpha: 0 },
-] as const, (row) => {
-  const accumulator = new FixedStepAccumulator(DT, 10);
-  const plan = accumulator.advance(row.dt);
-  assertEqual(plan.steps, row.steps, row.label);
-  near(plan.alpha, row.alpha, 1e-9, `${row.label} alpha`);
-  near(plan.remainder, row.dt - row.steps * DT, 1e-12, `${row.label} remainder`);
-  near(plan.droppedSeconds, 0, 1e-12, `${row.label} dropped`);
-});
+table(
+  "runtime/accumulator plans whole steps",
+  [
+    { label: "below one step runs none", dt: 0.016, steps: 0, alpha: 0.96 },
+    { label: "exactly one step", dt: DT, steps: 1, alpha: 0 },
+    { label: "two and a half steps", dt: DT * 2.5, steps: 2, alpha: 0.5 },
+    { label: "three steps worth", dt: DT * 3, steps: 3, alpha: 0 },
+  ] as const,
+  (row) => {
+    const accumulator = new FixedStepAccumulator(DT, 10);
+    const plan = accumulator.advance(row.dt);
+    assertEqual(plan.steps, row.steps, row.label);
+    near(plan.alpha, row.alpha, 1e-9, `${row.label} alpha`);
+    near(plan.remainder, row.dt - row.steps * DT, 1e-12, `${row.label} remainder`);
+    near(plan.droppedSeconds, 0, 1e-12, `${row.label} dropped`);
+  },
+);
 
 Deno.test("runtime/accumulator carries the remainder into the next frame", () => {
   const accumulator = new FixedStepAccumulator(DT, 10);
@@ -113,15 +121,19 @@ Deno.test("runtime/accumulator alpha stays inside [0, 1)", () => {
   }
 });
 
-table("runtime/fps meter averages samples", [
-  { label: "single 20ms frame", samples: [0.02], fps: 50 },
-  { label: "single 16ms frame", samples: [1 / 60], fps: 60 },
-  { label: "two frames average", samples: [0.01, 0.03], fps: 50 },
-] as const, (row) => {
-  const meter = new FpsMeter(60);
-  for (const sample of row.samples) meter.sample(sample);
-  near(meter.fps, row.fps, 1e-6, row.label);
-});
+table(
+  "runtime/fps meter averages samples",
+  [
+    { label: "single 20ms frame", samples: [0.02], fps: 50 },
+    { label: "single 16ms frame", samples: [1 / 60], fps: 60 },
+    { label: "two frames average", samples: [0.01, 0.03], fps: 50 },
+  ] as const,
+  (row) => {
+    const meter = new FpsMeter(60);
+    for (const sample of row.samples) meter.sample(sample);
+    near(meter.fps, row.fps, 1e-6, row.label);
+  },
+);
 
 Deno.test("runtime/fps meter reports zero without samples", () => {
   const meter = new FpsMeter();
@@ -193,7 +205,11 @@ Deno.test("runtime/host advance applies the snapshot to the first step only", ()
   const seen: Array<{ step: number; pressed: boolean; held: boolean }> = [];
   const runtimeHost = host(
     [defineSystem("input-spy", (ctx) => {
-      seen.push({ step: ctx.frame, pressed: ctx.input.wasPressed("Space"), held: ctx.input.isDown("Space") });
+      seen.push({
+        step: ctx.frame,
+        pressed: ctx.input.wasPressed("Space"),
+        held: ctx.input.isDown("Space"),
+      });
     }, 10)],
     { maxSteps: 5 },
   );
@@ -214,27 +230,35 @@ Deno.test("runtime/host tick ignores the accumulator", () => {
 
 Deno.test("runtime/host tick passes its snapshot to the first step only", () => {
   const presses: boolean[] = [];
-  const runtimeHost = host([defineSystem("spy", (ctx) => presses.push(ctx.input.wasPressed("KeyE")), 1)]);
+  const runtimeHost = host([
+    defineSystem("spy", (ctx) => presses.push(ctx.input.wasPressed("KeyE")), 1),
+  ]);
   runtimeHost.tick(3, snapshot({ pressed: ["KeyE"] }));
   assertEqual(presses, [true, false, false], "edge only on the first step");
 });
 
-table("runtime/host simulate maps seconds to fixed frames", [
-  { label: "half a second", seconds: 0.5, frames: 30 },
-  { label: "one second", seconds: 1, frames: 60 },
-  { label: "zero seconds still ticks once", seconds: 0, frames: 1 },
-  { label: "a tenth of a second", seconds: 0.1, frames: 6 },
-] as const, (row) => {
-  const runtimeHost = host();
-  const result = runtimeHost.simulate(row.seconds);
-  assertEqual(runtimeHost.session.frame, row.frames, `${row.label}: frames`);
-  assertEqual(result.frame, row.frames, `${row.label}: result frame`);
-  near(runtimeHost.session.time, row.frames * DT, 1e-9, `${row.label}: simulated time`);
-});
+table(
+  "runtime/host simulate maps seconds to fixed frames",
+  [
+    { label: "half a second", seconds: 0.5, frames: 30 },
+    { label: "one second", seconds: 1, frames: 60 },
+    { label: "zero seconds still ticks once", seconds: 0, frames: 1 },
+    { label: "a tenth of a second", seconds: 0.1, frames: 6 },
+  ] as const,
+  (row) => {
+    const runtimeHost = host();
+    const result = runtimeHost.simulate(row.seconds);
+    assertEqual(runtimeHost.session.frame, row.frames, `${row.label}: frames`);
+    assertEqual(result.frame, row.frames, `${row.label}: result frame`);
+    near(runtimeHost.session.time, row.frames * DT, 1e-9, `${row.label}: simulated time`);
+  },
+);
 
 Deno.test("runtime/host simulate repeats the last scripted frame after the script ends", () => {
   const held: boolean[] = [];
-  const runtimeHost = host([defineSystem("spy", (ctx) => held.push(ctx.input.isDown("ArrowRight")), 1)]);
+  const runtimeHost = host([
+    defineSystem("spy", (ctx) => held.push(ctx.input.isDown("ArrowRight")), 1),
+  ]);
   const script = InputScript.of(snapshot(), snapshot({ held: ["ArrowRight"] }));
   runtimeHost.simulate(5 * DT, script);
   assertEqual(held, [false, true, true, true, true], "last frame repeats");
@@ -276,7 +300,11 @@ Deno.test("runtime/host simulate is deterministic across two hosts", () => {
   const a = build(), b = build();
   a.host.simulate(2);
   b.host.simulate(2);
-  assertEqual(worldDigest(a.host.session.scene.world), worldDigest(b.host.session.scene.world), "digest");
+  assertEqual(
+    worldDigest(a.host.session.scene.world),
+    worldDigest(b.host.session.scene.world),
+    "digest",
+  );
   const landed = a.host.session.scene.world.require(a.faller, Transform).position;
   vecNear(landed, b.host.session.scene.world.require(b.faller, Transform).position, 0, "position");
   near(landed.y, 80, 1.5, "faller rests on the floor");

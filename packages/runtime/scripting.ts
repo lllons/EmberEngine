@@ -9,7 +9,32 @@
  * entity and props, so gameplay code never needs a global singleton.
  */
 
-import type { Entity } from "@ember/core";
+import {
+  BoxCollider,
+  CircleShape,
+  clamp,
+  Colors,
+  colliderWorldRect,
+  type Entity,
+  Lifetime,
+  MeshRenderer,
+  Name,
+  Parent,
+  RectShape,
+  rect,
+  RigidBody,
+  Sprite,
+  Tag,
+  TextLabel,
+  Transform,
+  Transform3D,
+  vec2,
+  vec3,
+  Velocity,
+  Visibility,
+  worldTransform,
+  worldTransform3D,
+} from "@ember/core";
 import type { SystemContext } from "./session.ts";
 
 export interface ScriptContext extends SystemContext {
@@ -107,4 +132,102 @@ export function numberProp(props: Record<string, unknown>, key: string, fallback
 export function stringProp(props: Record<string, unknown>, key: string, fallback: string): string {
   const value = props[key];
   return typeof value === "string" ? value : fallback;
+}
+
+// ---------------------------------------------------------------------------
+// Inline scripts (scene-authored JavaScript)
+// ---------------------------------------------------------------------------
+
+/**
+ * The identifiers an inline script can use without imports. Kept intentionally small:
+ * component types for reading/writing entity data, math helpers, prop readers and colours.
+ * `ctx` is supplied by the runtime at call time.
+ */
+const INLINE_SCRIPT_API = {
+  Transform,
+  Transform3D,
+  Velocity,
+  RigidBody,
+  BoxCollider,
+  CircleShape,
+  RectShape,
+  Sprite,
+  TextLabel,
+  MeshRenderer,
+  Tag,
+  Name,
+  Parent,
+  Visibility,
+  Lifetime,
+  vec2,
+  vec3,
+  rect,
+  clamp,
+  Colors,
+  prop,
+  numberProp,
+  stringProp,
+  worldTransform,
+  worldTransform3D,
+  colliderWorldRect,
+} as const;
+
+const INLINE_API_NAMES = Object.keys(INLINE_SCRIPT_API);
+const INLINE_API_VALUES = Object.values(INLINE_SCRIPT_API);
+
+/** Names available inside inline script source, for the editor's help text and tests. */
+export function inlineScriptApiNames(): string[] {
+  return [...INLINE_API_NAMES];
+}
+
+function asBehaviour(value: unknown): ScriptBehaviour {
+  if (typeof value === "function") {
+    return { update: value as (ctx: ScriptContext) => void };
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(
+      "inline script must evaluate to an object with start/update/destroy, or to an update function",
+    );
+  }
+  const behaviour = value as ScriptBehaviour;
+  for (const key of ["start", "update", "destroy"] as const) {
+    if (behaviour[key] !== undefined && typeof behaviour[key] !== "function") {
+      throw new Error(`inline script ${key} must be a function`);
+    }
+  }
+  return behaviour;
+}
+
+/**
+ * Compiles scene-authored JavaScript into a factory. The source is a JavaScript expression:
+ *
+ *   ({
+ *     start(ctx) { ... },
+ *     update(ctx) {
+ *       const body = ctx.scene.world.get(ctx.entity, RigidBody);
+ *       ...
+ *     },
+ *   })
+ *
+ * A bare function is treated as `update`. The factory is cached by the script system, and a
+ * fresh behaviour object is created for every entity so per-entity state never leaks.
+ */
+export function compileInlineScriptFactory(source: string): ScriptFactory {
+  if (source.trim().length === 0) throw new Error("inline script source is empty");
+  let evaluate: (...args: unknown[]) => unknown;
+  try {
+    evaluate = new Function(
+      ...INLINE_API_NAMES,
+      `"use strict";\nreturn (\n${source}\n);`,
+    ) as (...args: unknown[]) => unknown;
+  } catch (error) {
+    throw new Error(`inline script syntax error: ${(error as Error).message}`);
+  }
+  return (_props: Record<string, unknown>, _entity: Entity) =>
+    asBehaviour(evaluate(...INLINE_API_VALUES));
+}
+
+/** Compiles and instantiates one behaviour (editor validation, tests). */
+export function compileInlineScript(source: string): ScriptBehaviour {
+  return compileInlineScriptFactory(source)({}, 0);
 }

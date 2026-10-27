@@ -32,8 +32,13 @@ export const WM_KILLFOCUS = 0x0008;
 export const WM_QUIT = 0x0012;
 
 export const VK_BACK = 0x08;
+export const VK_TAB = 0x09;
 export const VK_RETURN = 0x0d;
+export const VK_SHIFT = 0x10;
+export const VK_CONTROL = 0x11;
 export const VK_ESCAPE = 0x1b;
+export const VK_END = 0x23;
+export const VK_HOME = 0x24;
 export const VK_LEFT = 0x25;
 export const VK_UP = 0x26;
 export const VK_RIGHT = 0x27;

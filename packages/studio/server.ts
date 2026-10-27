@@ -123,12 +123,21 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
     appSource = await buildStudioApp(options.workspaceRoot, state.descriptor, log);
   }
 
-  const server = await new Promise<{ server: Deno.HttpServer; address: Deno.NetAddr }>((resolve) => {
-    const httpServer = Deno.serve(
-      { hostname: options.hostname ?? "127.0.0.1", port: options.port ?? 0, onListen: (addr) => resolve({ server: httpServer, address: addr as Deno.NetAddr }) },
+  // `onListen` runs while `Deno.serve` is still executing, so it may only resolve the
+  // address; reading the server handle inside it hits the temporal dead zone.
+  let httpServer: Deno.HttpServer | undefined;
+  const address = await new Promise<Deno.NetAddr>((resolve) => {
+    httpServer = Deno.serve(
+      {
+        hostname: options.hostname ?? "127.0.0.1",
+        port: options.port ?? 0,
+        onListen: (addr) => resolve(addr as Deno.NetAddr),
+      },
       (request) => handleRequest(request),
     );
   });
+  const server = httpServer;
+  if (!server) throw new Error("editor server failed to start");
 
   let requests = 0;
 
@@ -296,9 +305,9 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
 
   return {
     get url() {
-      return `http://${options.hostname ?? "127.0.0.1"}:${server.address.port}`;
+      return `http://${options.hostname ?? "127.0.0.1"}:${address.port}`;
     },
-    port: server.address.port,
+    port: address.port,
     hostname: options.hostname ?? "127.0.0.1",
     get requests() {
       return requests;
@@ -309,7 +318,7 @@ export async function startStudio(options: StudioOptions): Promise<StudioServer>
     appSource: () => appSource,
     reload,
     handle: (request: Request) => handleRequest(request),
-    stop: () => server.server.shutdown(),
+    stop: () => server.shutdown(),
   };
 }
 

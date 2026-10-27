@@ -40,7 +40,8 @@ export interface SuiteResult {
   detail: string[];
 }
 
-const ANSI = /\x1b\[[0-9;]*m/g;
+// Built from char codes so linters do not flag a literal control character.
+const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
 /** Deno test colourises its summary; strip escapes before matching. */
 export function stripAnsi(text: string): string {
@@ -53,10 +54,14 @@ export function stripAnsi(text: string): string {
  *   FAILED | 123 passed | 0 failed | 3 ignored (1s)
  * Returns null when the output contains no summary (the suite died before reporting).
  */
-export function parseSummary(output: string): { passed: number; failed: number; ignored: number } | null {
-  const matches = [...stripAnsi(output).matchAll(
-    /(?<status>ok|FAILED)\s*\|\s*(?<passed>\d+)\s+passed\s*\|\s*(?<failed>\d+)\s+failed(?:\s*\|\s*(?<ignored>\d+)\s+ignored)?/g,
-  )];
+export function parseSummary(
+  output: string,
+): { passed: number; failed: number; ignored: number } | null {
+  const matches = [
+    ...stripAnsi(output).matchAll(
+      /(?<status>ok|FAILED)\s*\|\s*(?<passed>\d+)\s+passed\s*\|\s*(?<failed>\d+)\s+failed(?:\s*\|\s*(?<ignored>\d+)\s+ignored)?/g,
+    ),
+  ];
   const last = matches.at(-1);
   if (!last?.groups) return null;
   return {
@@ -89,7 +94,9 @@ export async function runSuite(suite: Suite): Promise<SuiteResult> {
   const text = stripAnsi(new TextDecoder().decode(stdout) + new TextDecoder().decode(stderr));
   const seconds = (performance.now() - started) / 1000;
   const summary = parseSummary(text);
-  const detail = text.split(/\r?\n/).filter((line) => line.startsWith("error") || line.includes("=>"))
+  const detail = text.split(/\r?\n/).filter((line) =>
+    line.startsWith("error") || line.includes("=>")
+  )
     .slice(0, 12);
 
   if (!summary) {
@@ -148,7 +155,9 @@ export function formatReport(results: readonly SuiteResult[]): string {
   lines.push("");
   lines.push(
     failed === 0 && broken.length === 0
-      ? `gate ${GATE}: ${passed} passing tests (${passed - GATE >= 0 ? "+" : ""}${passed - GATE} vs gate)`
+      ? `gate ${GATE}: ${passed} passing tests (${passed - GATE >= 0 ? "+" : ""}${
+        passed - GATE
+      } vs gate)`
       : `gate ${GATE}: NOT MET — ${failed} failing, ${broken.length} suite(s) unmeasurable`,
   );
   return lines.join("\n");

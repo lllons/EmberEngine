@@ -737,6 +737,94 @@ Deno.test("scripts with an empty name are ignored", () => {
   assertEquals(starts, 0);
 });
 
+Deno.test("inline script source runs with the component API", () => {
+  const scene = new Scene();
+  const entity = scene.createEntity();
+  scene.world.add(entity, Script, {
+    source: `({
+      update(ctx) {
+        const t = ctx.scene.world.get(ctx.entity, Transform);
+        const speed = numberProp(ctx.props, "speed", 60);
+        if (t) t.position.x += speed * ctx.dt;
+      }
+    })`,
+    props: { speed: 120 },
+  });
+  const session = new RuntimeSession({ scene, systems: [scriptSystem()] });
+  session.step(DT);
+  assertAlmostEquals(scene.world.require(entity, Transform).position.x, 2, 1e-9);
+});
+
+Deno.test("inline script can be a bare update function", () => {
+  const scene = new Scene();
+  const entity = scene.createEntity();
+  scene.world.add(entity, Script, {
+    source: `function (ctx) {
+      const t = ctx.scene.world.get(ctx.entity, Transform);
+      if (t) t.rotation += ctx.dt;
+    }`,
+  });
+  new RuntimeSession({ scene, systems: [scriptSystem()] }).step(DT);
+  assertAlmostEquals(scene.world.require(entity, Transform).rotation, DT, 1e-12);
+});
+
+Deno.test("inline script syntax errors are diagnosed without throwing", () => {
+  const diagnostics = new Diagnostics({ minLevel: "error" });
+  const scene = new Scene();
+  const entity = scene.createEntity();
+  scene.world.add(entity, Script, { source: "({ update( {" });
+  const session = new RuntimeSession({
+    scene,
+    systems: [scriptSystem()],
+    diagnostics,
+  });
+  session.step(DT);
+  session.step(DT);
+  assertEquals(diagnostics.count("error"), 1, "reported once");
+});
+
+Deno.test("an inline script that throws is disabled and can recover when edited", () => {
+  const diagnostics = new Diagnostics({ minLevel: "error" });
+  const scene = new Scene();
+  const entity = scene.createEntity();
+  scene.world.add(entity, Script, { source: "({ update() { throw new Error('boom'); } })" });
+  const session = new RuntimeSession({ scene, systems: [scriptSystem()], diagnostics });
+  session.step(DT);
+  session.step(DT);
+  assertEquals(diagnostics.count("error"), 1, "one failure report");
+  scene.world.set(entity, Script, {
+    source: `({ update(ctx) {
+      const t = ctx.scene.world.get(ctx.entity, Transform);
+      if (t) t.position.y = 42;
+    } })`,
+  });
+  session.step(DT);
+  assertEquals(scene.world.require(entity, Transform).position.y, 42);
+});
+
+Deno.test("editing inline source restarts the behaviour", () => {
+  const scene = new Scene();
+  const entity = scene.createEntity();
+  scene.world.add(entity, Script, {
+    source: `({ update(ctx) {
+      const t = ctx.scene.world.get(ctx.entity, Transform);
+      if (t) t.position.x += 1;
+    } })`,
+  });
+  const session = new RuntimeSession({ scene, systems: [scriptSystem()] });
+  session.step(DT);
+  assertEquals(scene.world.require(entity, Transform).position.x, 1);
+  scene.world.set(entity, Script, {
+    source: `({ update(ctx) {
+      const t = ctx.scene.world.get(ctx.entity, Transform);
+      if (t) t.position.y += 1;
+    } })`,
+  });
+  session.step(DT);
+  assertEquals(scene.world.require(entity, Transform).position.x, 1, "old behaviour stopped");
+  assertEquals(scene.world.require(entity, Transform).position.y, 1, "new behaviour started");
+});
+
 Deno.test("scripts update in ascending entity order", () => {
   const order: number[] = [];
   const registry = new ScriptRegistry().define("log", (_props, entity) => ({

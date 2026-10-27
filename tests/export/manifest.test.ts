@@ -61,7 +61,11 @@ Deno.test("export/manifest accepts the legacy name/width/height schema", async (
 
 Deno.test("export/manifest floors fractional viewport dimensions", async () => {
   await inTempDir(async (directory) => {
-    await writeGame(directory, { id: "frac", viewport: { width: 640.9, height: 480.2 } }, entryFile);
+    await writeGame(
+      directory,
+      { id: "frac", viewport: { width: 640.9, height: 480.2 } },
+      entryFile,
+    );
     const resolved = await resolveGame(directory);
     assertEqual(resolved.manifest.width, 640, "width floored");
     assertEqual(resolved.manifest.height, 480, "height floored");
@@ -79,7 +83,12 @@ Deno.test("export/manifest defaults the entry and description", async () => {
 
 Deno.test("export/manifest ignores a blank title and empty entry", async () => {
   await inTempDir(async (directory) => {
-    await writeGame(directory, { id: "blank", title: "", entry: "", viewport: { width: 10, height: 10 } }, entryFile);
+    await writeGame(directory, {
+      id: "blank",
+      title: "",
+      entry: "",
+      viewport: { width: 10, height: 10 },
+    }, entryFile);
     const resolved = await resolveGame(directory);
     assertEqual(resolved.manifest.title, "blank", "title falls back to the id");
     assertEqual(resolved.manifest.entry, "src/game.ts", "entry falls back to the default");
@@ -136,7 +145,11 @@ Deno.test("export/manifest rejects a zero height", async () => {
 
 Deno.test("export/manifest rejects an entry that does not exist", async () => {
   await inTempDir(async (directory) => {
-    await writeGame(directory, { id: "bad", viewport: { width: 640, height: 480 }, entry: "src/missing.ts" });
+    await writeGame(directory, {
+      id: "bad",
+      viewport: { width: 640, height: 480 },
+      entry: "src/missing.ts",
+    });
     await assertRejectsMatch(() => resolveGame(directory), /does not exist/);
   });
 });
@@ -148,28 +161,44 @@ Deno.test("export/manifest rejects a missing default entry", async () => {
   });
 });
 
-table("export/manifest slug", [
-  { label: "spaces become dashes", input: "Ember Runner", expected: "ember-runner" },
-  { label: "punctuation collapses", input: "  Mixed__Case!!  ", expected: "mixed-case" },
-  { label: "already slugged", input: "already-slugged", expected: "already-slugged" },
-  { label: "dots become dashes", input: "v1.2.3", expected: "v1-2-3" },
-  { label: "digits kept", input: "Game 2", expected: "game-2" },
-  { label: "only separators falls back", input: "---", expected: "game" },
-  { label: "empty falls back", input: "", expected: "game" },
-  { label: "accents are dropped", input: "Café", expected: "caf" },
-] as const, (row) => {
-  assertEqual(slug(row.input), row.expected, row.label);
-});
+table(
+  "export/manifest slug",
+  [
+    { label: "spaces become dashes", input: "Ember Runner", expected: "ember-runner" },
+    { label: "punctuation collapses", input: "  Mixed__Case!!  ", expected: "mixed-case" },
+    { label: "already slugged", input: "already-slugged", expected: "already-slugged" },
+    { label: "dots become dashes", input: "v1.2.3", expected: "v1-2-3" },
+    { label: "digits kept", input: "Game 2", expected: "game-2" },
+    { label: "only separators falls back", input: "---", expected: "game" },
+    { label: "empty falls back", input: "", expected: "game" },
+    { label: "accents are dropped", input: "Café", expected: "caf" },
+  ] as const,
+  (row) => {
+    assertEqual(slug(row.input), row.expected, row.label);
+  },
+);
 
-table("export/manifest toFileUrl", [
-  { label: "relative path", input: "src/game.ts", expected: "file:///src/game.ts" },
-  { label: "absolute path", input: "/work/src/game.ts", expected: "file:///work/src/game.ts" },
-  { label: "windows separators", input: "C:\\work\\src\\game.ts", expected: "file:///C:/work/src/game.ts" },
-  { label: "spaces encoded", input: "C:\\my work\\a.ts", expected: "file:///C:/my%20work/a.ts" },
-  { label: "windows absolute path", input: "C:/work/game.ts", expected: "file:///C:/work/game.ts" },
-] as const, (row) => {
-  assertEqual(toFileUrl(row.input), row.expected, row.label);
-});
+table(
+  "export/manifest toFileUrl",
+  [
+    { label: "relative path", input: "src/game.ts", expected: "file:///src/game.ts" },
+    { label: "absolute path", input: "/work/src/game.ts", expected: "file:///work/src/game.ts" },
+    {
+      label: "windows separators",
+      input: "C:\\work\\src\\game.ts",
+      expected: "file:///C:/work/src/game.ts",
+    },
+    { label: "spaces encoded", input: "C:\\my work\\a.ts", expected: "file:///C:/my%20work/a.ts" },
+    {
+      label: "windows absolute path",
+      input: "C:/work/game.ts",
+      expected: "file:///C:/work/game.ts",
+    },
+  ] as const,
+  (row) => {
+    assertEqual(toFileUrl(row.input), row.expected, row.label);
+  },
+);
 
 Deno.test("export/manifest slug output is always file safe", () => {
   for (const name of ["A B", "a/b", "a\\b", "..", "./x", "TAB\tNAME", "100%"]) {

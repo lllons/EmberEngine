@@ -7,3 +7,4 @@
  */
 
 export { NativeEditor, runNativeEditor, type NativeEditorOptions } from "./native/app.ts";
+export * from "./examples.ts";

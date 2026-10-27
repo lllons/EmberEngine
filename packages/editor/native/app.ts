@@ -26,6 +26,7 @@ import {
   RectShape,
   Scene,
   sceneFileName,
+  Script,
   TextLabel,
   Transform,
   Transform3D,
@@ -42,7 +43,8 @@ import {
 } from "@ember/render2d";
 import { buildFrame } from "@ember/render3d";
 import { meshNames } from "@ember/render3d";
-import { type Game, RuntimeHost } from "@ember/runtime";
+import { compileInlineScript, type Game, RuntimeHost } from "@ember/runtime";
+import { createEmptyGame, type EditorExample } from "../examples.ts";
 import {
   clientToScene,
   entitySceneBounds,
@@ -55,11 +57,16 @@ import {
   openWindow,
   type Message,
   VK_BACK,
+  VK_CONTROL,
+  VK_DELETE,
   VK_DOWN,
+  VK_END,
   VK_ESCAPE,
+  VK_HOME,
   VK_LEFT,
   VK_RETURN,
   VK_RIGHT,
+  VK_TAB,
   VK_UP,
   WM_CHAR,
   WM_KEYDOWN,
@@ -93,6 +100,7 @@ const T = {
   accent: "#ff7a2f",
   accentSoft: "#3a2318",
   gold: "#ffc857",
+  sky: "#7fb2ff",
   good: "#5ec27a",
   bad: "#e5484d",
   field: "#090d16",
@@ -130,7 +138,7 @@ function clamp(value: number, min: number, max: number): number {
 // Inspector schema
 // ---------------------------------------------------------------------------
 
-type FieldKind = "number" | "text" | "color" | "boolean" | "enum" | "mesh";
+type FieldKind = "number" | "text" | "color" | "boolean" | "enum" | "mesh" | "json";
 
 interface FieldDefinition {
   path: string;
@@ -238,6 +246,7 @@ const COMPONENT_FIELDS: Record<string, readonly FieldDefinition[]> = {
     { path: "y", label: "Y" },
     { path: "angular", label: "Angular" },
   ],
+  Script: [],
   Tag: [{ path: "value", label: "Tag" }],
   Visibility: [{ path: "visible", label: "Visible", kind: "boolean" }],
   Parent: [{ path: "entity", label: "Parent id" }],
@@ -255,6 +264,7 @@ const SECTION_ORDER = [
   "BoxCollider",
   "RigidBody",
   "Velocity",
+  "Script",
   "Tag",
   "Visibility",
   "Parent",
@@ -282,6 +292,24 @@ interface Editing {
   text: string;
 }
 
+interface CodeEditorState {
+  entity: Entity;
+  text: string;
+  caret: number;
+  scroll: number;
+  hscroll: number;
+  error: string;
+}
+
+interface CodeEditorMetrics {
+  codeX: number;
+  codeY: number;
+  codeW: number;
+  codeH: number;
+  lineHeight: number;
+  charWidth: number;
+}
+
 interface DragState {
   entity: Entity;
   startWorld: Vec2;
@@ -297,6 +325,8 @@ interface PanState {
 export interface NativeEditorOptions {
   game: Game;
   sceneDirectory: string;
+  examplesRoot?: string;
+  examples?: readonly EditorExample[];
   title?: string;
   savedScenes?: Iterable<string>;
   startScene?: string;
@@ -343,10 +373,13 @@ function displayValue(value: unknown): string {
 // ---------------------------------------------------------------------------
 
 export class NativeEditor {
-  private readonly game: Game;
-  private readonly sceneDirectory: string;
-  private readonly projectTitle: string;
-  private readonly savedScenes: Set<string>;
+  private game: Game;
+  private sceneDirectory: string;
+  private readonly defaultSceneDirectory: string;
+  private readonly examplesRoot: string;
+  private readonly examples: readonly EditorExample[];
+  private projectTitle: string;
+  private savedScenes: Set<string>;
   private scene: Scene;
   private sceneName: string;
   private camera: Camera2DState;
@@ -366,12 +399,25 @@ export class NativeEditor {
   private inspectorScroll = 0;
   private inspectorContentHeight = 0;
   private editing: Editing | null = null;
+  private codeEditor: CodeEditorState | null = null;
+  private codeEditorButtons: Array<Hit<() => void>> = [];
+  private codeEditorMetrics: CodeEditorMetrics = {
+    codeX: 0,
+    codeY: 0,
+    codeW: 0,
+    codeH: 0,
+    lineHeight: 16,
+    charWidth: 7,
+  };
+  private ctrlDown = false;
   private buttons: Array<Hit<() => void>> = [];
   private fields: Array<Hit<FieldSpec>> = [];
   private entityRows: Array<Hit<Entity>> = [];
   private menuHits: Array<Hit<() => void>> = [];
   private sceneMenuOpen = false;
   private componentMenuOpen = false;
+  private examplesMenuOpen = false;
+  private examplesButtonRect: Rect | null = null;
   private previewRect: PreviewRect | null = null;
   private commands: DrawCommand[] = [];
   private drag: DragState | null = null;
@@ -381,6 +427,9 @@ export class NativeEditor {
   constructor(options: NativeEditorOptions) {
     this.game = options.game;
     this.sceneDirectory = options.sceneDirectory;
+    this.defaultSceneDirectory = options.sceneDirectory;
+    this.examplesRoot = options.examplesRoot ?? join(options.sceneDirectory, "..", "examples");
+    this.examples = options.examples ?? [];
     this.projectTitle = options.title ?? this.game.title;
     this.savedScenes = new Set(options.savedScenes ?? []);
     const names = this.game.sceneNames();
@@ -451,6 +500,7 @@ export class NativeEditor {
     switch (message.msg) {
       case WM_KILLFOCUS:
         this.releasePlayKeys();
+        this.ctrlDown = false;
         this.drag = null;
         this.pan = null;
         return false;
@@ -487,7 +537,18 @@ export class NativeEditor {
   }
 
   private onLeftDown(x: number, y: number): void {
+    if (this.codeEditor) {
+      this.onCodeEditorLeftDown(x, y);
+      return;
+    }
     this.commitEditing();
+    if (this.examplesMenuOpen) {
+      const hit = this.menuHits.find((entry) => contains(entry.rect, x, y));
+      this.examplesMenuOpen = false;
+      this.needsPaint = true;
+      if (hit) hit.action();
+      return;
+    }
     if (this.sceneMenuOpen) {
       const hit = this.menuHits.find((entry) => contains(entry.rect, x, y));
       this.sceneMenuOpen = false;
@@ -577,6 +638,10 @@ export class NativeEditor {
   }
 
   private onMouseMove(x: number, y: number): void {
+    if (this.codeEditor) {
+      this.needsPaint = true;
+      return;
+    }
     if (this.mode === "play" && this.previewRect && contains(this.previewRect, x, y)) {
       const point = clientToScene(this.previewRect, x, y);
       this.tracker?.moveMouse(point.x, point.y);
@@ -619,6 +684,12 @@ export class NativeEditor {
   }
 
   private onWheel(x: number, y: number, delta: number): void {
+    if (this.codeEditor) {
+      const lines = this.codeEditor.text.split("\n").length;
+      this.codeEditor.scroll = clamp(this.codeEditor.scroll - delta * 3, 0, Math.max(0, lines - 4));
+      this.needsPaint = true;
+      return;
+    }
     if (this.mode === "play") return;
     const preview = this.previewRect;
     if (preview && contains(preview, x, y)) {
@@ -648,6 +719,13 @@ export class NativeEditor {
   }
 
   private onKeyDown(vk: number): boolean {
+    if (vk === VK_CONTROL) {
+      this.ctrlDown = true;
+      return true;
+    }
+    if (this.codeEditor) {
+      return this.onCodeEditorKey(vk);
+    }
     if (this.editing) {
       if (vk === VK_RETURN) {
         this.commitEditing();
@@ -705,12 +783,17 @@ export class NativeEditor {
   }
 
   private onKeyUp(vk: number): void {
+    if (vk === VK_CONTROL) this.ctrlDown = false;
     if (this.mode !== "play") return;
     const key = keyName(vk);
     if (key) this.tracker?.release(key);
   }
 
   private onChar(code: number): boolean {
+    if (this.codeEditor) {
+      if (code >= 32 && code !== 127) this.insertCode(String.fromCharCode(code));
+      return true;
+    }
     if (!this.editing) return false;
     if (code >= 32 && code !== 127) {
       this.editing.text += String.fromCharCode(code);
@@ -776,10 +859,206 @@ export class NativeEditor {
         return;
       }
       spec.set(value);
+    } else if (spec.kind === "json") {
+      try {
+        spec.set(JSON.parse(text));
+      } catch (error) {
+        this.toast(`Invalid JSON: ${(error as Error).message}`, "error");
+        this.needsPaint = true;
+        return;
+      }
     } else {
       spec.set(text);
     }
     this.markDirty();
+  }
+
+  private openCodeEditor(entity: Entity): void {
+    const script = this.scene.world.get(entity, Script);
+    if (!script) return;
+    this.commitEditing();
+    this.sceneMenuOpen = false;
+    this.componentMenuOpen = false;
+    this.examplesMenuOpen = false;
+    const source = script.source ?? "";
+    this.codeEditor = {
+      entity,
+      text: source,
+      caret: source.length,
+      scroll: 0,
+      hscroll: 0,
+      error: "",
+    };
+    this.needsPaint = true;
+  }
+
+  private closeCodeEditor(): void {
+    this.codeEditor = null;
+    this.needsPaint = true;
+  }
+
+  private applyCodeEditor(): void {
+    const editor = this.codeEditor;
+    if (!editor) return;
+    if (editor.text.trim().length > 0) {
+      try {
+        compileInlineScript(editor.text);
+      } catch (error) {
+        editor.error = (error as Error).message;
+        this.needsPaint = true;
+        return;
+      }
+    }
+    const script = this.scene.world.get(editor.entity, Script);
+    if (!script) {
+      this.closeCodeEditor();
+      this.toast("The scripted entity no longer exists", "error");
+      return;
+    }
+    script.source = editor.text;
+    this.codeEditor = null;
+    this.markDirty();
+    this.toast(
+      editor.text.trim().length > 0
+        ? `Applied inline script (${editor.text.split("\n").length} lines)`
+        : "Inline source cleared; registered behaviour is used",
+    );
+  }
+
+  private insertCode(text: string): void {
+    const editor = this.codeEditor;
+    if (!editor) return;
+    editor.text = editor.text.slice(0, editor.caret) + text + editor.text.slice(editor.caret);
+    editor.caret += text.length;
+    editor.error = "";
+    this.needsPaint = true;
+  }
+
+  private codeLineInfo(text: string, caret: number): { line: number; column: number; start: number } {
+    const before = text.slice(0, caret);
+    const line = before.split("\n").length - 1;
+    const lastBreak = before.lastIndexOf("\n");
+    return { line, column: before.length - lastBreak - 1, start: lastBreak + 1 };
+  }
+
+  private codeLineStart(text: string, line: number): number {
+    let index = 0;
+    for (let current = 0; current < line; current++) {
+      const next = text.indexOf("\n", index);
+      if (next === -1) return text.length;
+      index = next + 1;
+    }
+    return index;
+  }
+
+  private moveCodeCaret(lineDelta: number): void {
+    const editor = this.codeEditor;
+    if (!editor) return;
+    const lines = editor.text.split("\n");
+    const info = this.codeLineInfo(editor.text, editor.caret);
+    const target = clamp(info.line + lineDelta, 0, lines.length - 1);
+    const start = this.codeLineStart(editor.text, target);
+    editor.caret = start + Math.min(info.column, lines[target].length);
+    editor.error = "";
+    this.needsPaint = true;
+  }
+
+  private onCodeEditorKey(vk: number): boolean {
+    const editor = this.codeEditor;
+    if (!editor) return false;
+    if (this.ctrlDown && vk === VK_RETURN) {
+      this.applyCodeEditor();
+      return true;
+    }
+    if (this.ctrlDown && vk === 0x53) { // Ctrl+S
+      this.applyCodeEditor();
+      return true;
+    }
+    if (vk === VK_ESCAPE) {
+      this.closeCodeEditor();
+      return true;
+    }
+    if (vk === VK_RETURN) {
+      this.insertCode("\n");
+      return true;
+    }
+    if (vk === VK_TAB) {
+      this.insertCode("  ");
+      return true;
+    }
+    if (vk === VK_BACK) {
+      if (editor.caret > 0) {
+        editor.text = editor.text.slice(0, editor.caret - 1) + editor.text.slice(editor.caret);
+        editor.caret -= 1;
+        editor.error = "";
+        this.needsPaint = true;
+      }
+      return true;
+    }
+    if (vk === VK_DELETE) {
+      if (editor.caret < editor.text.length) {
+        editor.text = editor.text.slice(0, editor.caret) + editor.text.slice(editor.caret + 1);
+        editor.error = "";
+        this.needsPaint = true;
+      }
+      return true;
+    }
+    if (vk === VK_LEFT) {
+      editor.caret = Math.max(0, editor.caret - 1);
+      editor.error = "";
+      this.needsPaint = true;
+      return true;
+    }
+    if (vk === VK_RIGHT) {
+      editor.caret = Math.min(editor.text.length, editor.caret + 1);
+      editor.error = "";
+      this.needsPaint = true;
+      return true;
+    }
+    if (vk === VK_UP || vk === VK_DOWN) {
+      this.moveCodeCaret(vk === VK_UP ? -1 : 1);
+      return true;
+    }
+    if (vk === VK_HOME || vk === VK_END) {
+      const info = this.codeLineInfo(editor.text, editor.caret);
+      const start = this.codeLineStart(editor.text, info.line);
+      const lineEnd = editor.text.indexOf("\n", start);
+      editor.caret = vk === VK_HOME ? start : lineEnd === -1 ? editor.text.length : lineEnd;
+      editor.error = "";
+      this.needsPaint = true;
+      return true;
+    }
+    return true;
+  }
+
+  private onCodeEditorLeftDown(x: number, y: number): void {
+    const hit = this.codeEditorButtons.find((entry) => contains(entry.rect, x, y));
+    if (hit) {
+      hit.action();
+      return;
+    }
+    const editor = this.codeEditor;
+    if (!editor) return;
+    const metrics = this.codeEditorMetrics;
+    if (
+      x < metrics.codeX || x > metrics.codeX + metrics.codeW ||
+      y < metrics.codeY || y > metrics.codeY + metrics.codeH
+    ) return;
+    const lines = editor.text.split("\n");
+    const line = clamp(
+      Math.floor((y - metrics.codeY) / metrics.lineHeight) + editor.scroll,
+      0,
+      lines.length - 1,
+    );
+    const lineStart = this.codeLineStart(editor.text, line);
+    const column = clamp(
+      Math.round((x - metrics.codeX + editor.hscroll) / metrics.charWidth),
+      0,
+      lines[line].length,
+    );
+    editor.caret = lineStart + column;
+    editor.error = "";
+    this.needsPaint = true;
   }
 
   private markDirty(): void {
@@ -918,6 +1197,64 @@ export class NativeEditor {
     this.toast(`Opened ${name}`);
   }
 
+  /** Swaps the whole project (empty project or a built-in example). */
+  private async replaceProject(
+    game: Game,
+    title: string,
+    directory: string,
+    startScene: string,
+    loadFromDisk: boolean,
+  ): Promise<void> {
+    if (this.dirty && !this.window?.confirm("Discard unsaved changes and switch project?")) {
+      return;
+    }
+    if (this.mode !== "edit") this.stopPlay();
+    this.commitEditing();
+    const loaded = loadFromDisk
+      ? await game.loadSceneDirectory(directory).catch(() => [])
+      : [];
+    this.game = game;
+    this.projectTitle = title;
+    this.sceneDirectory = directory;
+    this.savedScenes = new Set(loaded);
+    const start = game.hasScene(startScene) ? startScene : game.startScene;
+    this.sceneName = start;
+    this.scene = game.createScene(start);
+    this.camera = this.cameraFor(this.scene);
+    this.selected = null;
+    this.hover = null;
+    this.editing = null;
+    this.dirty = false;
+    this.hierarchyScroll = 0;
+    this.inspectorScroll = 0;
+    this.sceneMenuOpen = false;
+    this.componentMenuOpen = false;
+    this.examplesMenuOpen = false;
+    this.window?.setTitle(this.windowTitle());
+    this.toast(`Opened ${title}`);
+    this.needsPaint = true;
+  }
+
+  private async openExample(example: EditorExample): Promise<void> {
+    await this.replaceProject(
+      example.createGame(),
+      example.title,
+      join(this.examplesRoot, example.id, "scenes"),
+      example.startScene,
+      true,
+    );
+  }
+
+  private async openEmptyProject(): Promise<void> {
+    await this.replaceProject(
+      createEmptyGame(),
+      "Untitled Project",
+      this.defaultSceneDirectory,
+      "untitled",
+      false,
+    );
+  }
+
   private newScene(): void {
     let index = 2;
     let name = `scene-${index}`;
@@ -1009,6 +1346,8 @@ export class NativeEditor {
     this.fields = [];
     this.entityRows = [];
     this.menuHits = [];
+    this.codeEditorButtons = [];
+    this.examplesButtonRect = null;
     const sceneWidth = this.mode === "edit"
       ? this.scene.resources.viewport.width
       : this.host?.session.camera.viewport.width ?? 960;
@@ -1029,6 +1368,7 @@ export class NativeEditor {
     this.drawPreview(canvas);
     this.drawStatus(canvas, width, height);
     this.drawMenus(canvas, width, height);
+    this.drawCodeEditor(canvas, width, height);
     this.needsPaint = false;
   }
 
@@ -1037,17 +1377,17 @@ export class NativeEditor {
     canvas.fillRect(0, TOOLBAR_HEIGHT - 1, width, 1, T.border);
     canvas.text(14, 13, "EMBER", 16, T.accent, "left", "top", true);
     canvas.text(70, 15, "ENGINE", 12, T.muted);
-    const title = `${this.projectTitle} / ${this.sceneName}`;
-    canvas.text(130, 14, title, 13, T.text);
-    if (this.dirty) canvas.fillRect(122, 14, 5, 5, T.gold);
-
     const sceneLabel = `Scene: ${this.sceneName} ▾`;
     const sceneX = Math.min(width - 560, 390);
+    const title = `${this.projectTitle} / ${this.sceneName}`;
+    canvas.text(130, 14, truncate(canvas, title, Math.max(120, sceneX - 142), 13), 13, T.text);
+    if (this.dirty) canvas.fillRect(122, 14, 5, 5, T.gold);
     this.button(canvas, sceneLabel, sceneX, 9, 170, 28, {
       active: this.sceneMenuOpen,
       action: () => {
         this.sceneMenuOpen = !this.sceneMenuOpen;
         this.componentMenuOpen = false;
+        this.examplesMenuOpen = false;
         this.needsPaint = true;
       },
     });
@@ -1070,7 +1410,7 @@ export class NativeEditor {
       68,
       () => this.togglePlay(),
     );
-    this.toolbarButton(
+    right = this.toolbarButton(
       canvas,
       this.dirty ? "Save *" : "Save",
       right,
@@ -1079,6 +1419,19 @@ export class NativeEditor {
       false,
       this.dirty,
     );
+
+    const examplesWidth = 96;
+    const examplesX = right - examplesWidth;
+    this.button(canvas, "Examples ▾", examplesX, 9, examplesWidth, 28, {
+      active: this.examplesMenuOpen,
+      action: () => {
+        this.examplesMenuOpen = !this.examplesMenuOpen;
+        this.sceneMenuOpen = false;
+        this.componentMenuOpen = false;
+        this.needsPaint = true;
+      },
+    });
+    this.examplesButtonRect = { x: examplesX, y: 9, w: examplesWidth, h: 28 };
   }
 
   private toolbarButton(
@@ -1317,6 +1670,37 @@ export class NativeEditor {
       for (const spec of specs) {
         y = this.field(canvas, x + 12, y, panelWidth, spec);
       }
+      if (name === "Script") {
+        const script = this.scene.world.get(entity, Script);
+        const source = script?.source ?? "";
+        const lines = source.trim().length > 0 ? source.split("\n").length : 0;
+        canvas.text(
+          x + 12,
+          y + 4,
+          lines > 0 ? `inline source · ${lines} line${lines === 1 ? "" : "s"}` : "uses the registered behaviour",
+          10,
+          lines > 0 ? T.sky : T.faint,
+        );
+        y += 18;
+        const half = (panelWidth - 6) / 2;
+        this.button(canvas, "Edit inline code", x + 12, y, half, 22, {
+          action: () => this.openCodeEditor(entity),
+          small: true,
+        });
+        this.button(canvas, "Clear source", x + 18 + half, y, half, 22, {
+          action: () => {
+            if (script) {
+              script.source = "";
+              this.markDirty();
+              this.toast("Inline source cleared; registered behaviour is used");
+            }
+          },
+          disabled: lines === 0,
+          small: true,
+          danger: lines > 0,
+        });
+        y += 28;
+      }
     }
 
     y += 8;
@@ -1324,6 +1708,7 @@ export class NativeEditor {
       action: () => {
         this.componentMenuOpen = !this.componentMenuOpen;
         this.sceneMenuOpen = false;
+        this.examplesMenuOpen = false;
         this.needsPaint = true;
       },
       small: true,
@@ -1340,6 +1725,33 @@ export class NativeEditor {
       type as unknown as ComponentType<Record<string, unknown>>,
     );
     if (!data) return [];
+    if (name === "Script") {
+      const script = this.scene.world.require(entity, Script);
+      const names = ["", ...this.game.scripts().names()];
+      return [
+        {
+          id: `${entity}:Script:name`,
+          label: "Behaviour",
+          kind: "enum",
+          options: names,
+          get: () => script.name,
+          set: (next) => {
+            script.name = String(next);
+          },
+        },
+        {
+          id: `${entity}:Script:props`,
+          label: "Props (JSON)",
+          kind: "json",
+          get: () => script.props,
+          set: (next) => {
+            if (next && typeof next === "object" && !Array.isArray(next)) {
+              script.props = next as Record<string, unknown>;
+            }
+          },
+        },
+      ];
+    }
     const definitions = COMPONENT_FIELDS[name] ?? genericFields(data);
     return definitions.map((definition) => {
       const value = readPath(data, definition.path);
@@ -1456,6 +1868,27 @@ export class NativeEditor {
     });
 
     if (this.mode === "edit") {
+      if (this.scene.world.entityCount === 0) {
+        canvas.text(
+          rect.x + rect.w / 2,
+          rect.y + rect.h / 2 - 16,
+          "EMPTY SCENE",
+          22,
+          T.muted,
+          "center",
+          "middle",
+          true,
+        );
+        canvas.text(
+          rect.x + rect.w / 2,
+          rect.y + rect.h / 2 + 12,
+          "add an entity, or open an example from the Examples menu",
+          12,
+          T.faint,
+          "center",
+          "middle",
+        );
+      }
       if (this.selected !== null) this.drawSelection(canvas, this.selected, true);
       else if (this.hover !== null) this.drawSelection(canvas, this.hover, false);
       canvas.text(rect.x + 10, rect.y + rect.h - 18, "right-drag pan · wheel zoom · click select", 11, T.faint);
@@ -1565,6 +1998,39 @@ export class NativeEditor {
       void height;
     }
 
+    if (this.examplesMenuOpen) {
+      const menuWidth = 420;
+      const rowHeight = 56;
+      const footerHeight = 32;
+      const menuHeight = this.examples.length * rowHeight + footerHeight + 10;
+      const anchor = this.examplesButtonRect;
+      const x = Math.max(12, Math.min(width - menuWidth - 12, (anchor?.x ?? width - 110) + 96 - menuWidth));
+      const y = TOOLBAR_HEIGHT + 2;
+      canvas.fillRect(x, y, menuWidth, menuHeight, T.header);
+      canvas.strokeRect(x, y, menuWidth, menuHeight, T.border);
+      let rowY = y + 5;
+      for (const example of this.examples) {
+        const rect = { x: x + 4, y: rowY, w: menuWidth - 8, h: rowHeight - 2 };
+        if (this.containsMouse(rect)) canvas.fillRect(rect.x, rect.y, rect.w, rect.h, T.rowHover);
+        canvas.text(rect.x + 10, rect.y + 7, example.title, 12, T.text, "left", "top", true);
+        canvas.text(
+          rect.x + 10,
+          rect.y + 25,
+          truncate(canvas, example.description, rect.w - 20, 10),
+          10,
+          T.muted,
+        );
+        this.menuHits.push({ rect, action: () => void this.openExample(example) });
+        rowY += rowHeight;
+      }
+      canvas.fillRect(x + 4, rowY + 1, menuWidth - 8, 1, T.border);
+      const emptyRect = { x: x + 4, y: rowY + 5, w: menuWidth - 8, h: footerHeight - 6 };
+      if (this.containsMouse(emptyRect)) canvas.fillRect(emptyRect.x, emptyRect.y, emptyRect.w, emptyRect.h, T.rowHover);
+      canvas.text(emptyRect.x + 10, emptyRect.y + 7, "＋ New empty project", 11, T.gold);
+      this.menuHits.push({ rect: emptyRect, action: () => void this.openEmptyProject() });
+      void height;
+    }
+
     if (this.componentMenuOpen && this.selected !== null) {
       const existing = new Set(this.scene.world.componentsOf(this.selected));
       const available = componentNames().filter((name) => !existing.has(name));
@@ -1587,6 +2053,152 @@ export class NativeEditor {
       }
       canvas.restore();
     }
+  }
+
+  private drawCodeEditor(canvas: GdiCanvas, width: number, height: number): void {
+    const editor = this.codeEditor;
+    if (!editor) return;
+
+    canvas.fillRect(0, 0, width, height, "#05070c");
+    const panelW = Math.min(1120, width - 80);
+    const panelH = Math.min(760, height - 80);
+    const px = Math.floor((width - panelW) / 2);
+    const py = Math.floor((height - panelH) / 2);
+    canvas.fillRect(px, py, panelW, panelH, T.panel);
+    canvas.strokeRect(px, py, panelW, panelH, T.border);
+    canvas.fillRect(px, py, panelW, 48, T.header);
+    canvas.fillRect(px, py + 47, panelW, 1, T.border);
+    canvas.text(px + 16, py + 8, "INLINE SCRIPT", 13, T.gold, "left", "top", true);
+    canvas.text(
+      px + 16,
+      py + 27,
+      `${this.scene.labelOf(editor.entity)} · entity ${editor.entity} · Ctrl+Enter applies`,
+      10,
+      T.muted,
+    );
+
+    const applyW = 78;
+    const cancelW = 72;
+    const cancelX = px + panelW - 16 - cancelW;
+    const applyX = cancelX - 8 - applyW;
+    this.button(canvas, "Cancel", cancelX, py + 10, cancelW, 26, {
+      action: () => this.closeCodeEditor(),
+      small: true,
+    });
+    this.codeEditorButtons.push({
+      rect: { x: cancelX, y: py + 10, w: cancelW, h: 26 },
+      action: () => this.closeCodeEditor(),
+    });
+    this.button(canvas, "Apply", applyX, py + 10, applyW, 26, {
+      action: () => this.applyCodeEditor(),
+      accent: true,
+      small: true,
+    });
+    this.codeEditorButtons.push({
+      rect: { x: applyX, y: py + 10, w: applyW, h: 26 },
+      action: () => this.applyCodeEditor(),
+    });
+
+    const gutter = 54;
+    const codeX = px + gutter + 8;
+    const codeY = py + 60;
+    const footerH = 48;
+    const codeW = panelW - gutter - 24;
+    const codeH = panelH - 60 - footerH;
+    const lineHeight = 16;
+    const fontMono = true;
+    const charWidth = canvas.measureText("M", 12, false, fontMono);
+    this.codeEditorMetrics = { codeX, codeY, codeW, codeH, lineHeight, charWidth };
+
+    const lines = editor.text.split("\n");
+    const info = this.codeLineInfo(editor.text, editor.caret);
+    const visibleLines = Math.max(1, Math.floor(codeH / lineHeight));
+    if (info.line < editor.scroll) editor.scroll = info.line;
+    if (info.line >= editor.scroll + visibleLines) editor.scroll = info.line - visibleLines + 1;
+    editor.scroll = clamp(editor.scroll, 0, Math.max(0, lines.length - 1));
+
+    const activeLine = lines[info.line] ?? "";
+    const prefix = activeLine.slice(0, Math.min(info.column, activeLine.length));
+    const caretX = canvas.measureText(prefix, 12, false, fontMono);
+    if (caretX - editor.hscroll < 0) editor.hscroll = Math.max(0, caretX - 16);
+    else if (caretX - editor.hscroll > codeW - 24) editor.hscroll = caretX - codeW + 32;
+
+    canvas.fillRect(px + 1, codeY - 6, panelW - 2, codeH + 10, "#080c14");
+    canvas.strokeRect(px + 1, codeY - 6, panelW - 2, codeH + 10, T.borderSoft);
+    canvas.clip(codeX - gutter + 4, codeY - 6, codeW + gutter - 4, codeH + 10);
+    if (editor.text.length === 0) {
+      canvas.text(
+        codeX,
+        codeY + 2,
+        "// inline JavaScript — return { start, update, destroy } or a function",
+        11,
+        T.faint,
+        "left",
+        "top",
+        false,
+        fontMono,
+      );
+    }
+    for (let index = editor.scroll; index < Math.min(lines.length, editor.scroll + visibleLines); index++) {
+      const lineY = codeY + (index - editor.scroll) * lineHeight;
+      if (index === info.line) canvas.fillRect(codeX - gutter + 4, lineY - 1, codeW + gutter - 4, lineHeight, "#111827");
+      canvas.text(
+        codeX - 10,
+        lineY + 1,
+        String(index + 1),
+        10,
+        T.faint,
+        "right",
+        "top",
+        false,
+        fontMono,
+      );
+      canvas.text(
+        codeX - editor.hscroll,
+        lineY + 1,
+        lines[index],
+        12,
+        T.text,
+        "left",
+        "top",
+        false,
+        fontMono,
+      );
+    }
+    if (info.line >= editor.scroll && info.line < editor.scroll + visibleLines) {
+      const caretY = codeY + (info.line - editor.scroll) * lineHeight;
+      canvas.fillRect(codeX + caretX - editor.hscroll, caretY, 1, lineHeight, T.accent);
+    }
+    canvas.restore();
+
+    const footerY = py + panelH - footerH;
+    canvas.fillRect(px + 1, footerY, panelW - 2, footerH - 1, T.header);
+    canvas.fillRect(px + 1, footerY, panelW - 2, 1, T.border);
+    if (editor.error) {
+      canvas.text(
+        px + 16,
+        footerY + 7,
+        truncate(canvas, `error: ${editor.error}`, panelW - 32, 10),
+        10,
+        "#ffb3c0",
+      );
+    } else {
+      canvas.text(
+        px + 16,
+        footerY + 7,
+        "Ctrl+Enter or Ctrl+S applies · Esc cancels · Tab inserts two spaces",
+        10,
+        T.muted,
+      );
+    }
+    canvas.text(
+      px + panelW - 16,
+      footerY + 7,
+      `${info.line + 1}:${info.column + 1} · ${lines.length} line${lines.length === 1 ? "" : "s"}`,
+      10,
+      T.faint,
+      "right",
+    );
   }
 
   private containsMouse(rect: Rect): boolean {

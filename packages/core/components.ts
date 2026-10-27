@@ -205,11 +205,14 @@ export const BoxCollider = defineComponent<{
 /**
  * Behaviour reference. `name` resolves through a `ScriptRegistry` in the runtime;
  * `props` are the script's serialized configuration, so scripts survive save/load.
+ * `source` is optional inline JavaScript authored in the editor: when present it wins
+ * over `name`, so a scene can carry its own behaviour without a compiled game module.
  */
-export const Script = defineComponent<{ name: string; props: Record<string, unknown> }>(
-  "Script",
-  () => ({ name: "", props: {} }),
-);
+export const Script = defineComponent<{
+  name: string;
+  props: Record<string, unknown>;
+  source: string;
+}>("Script", () => ({ name: "", props: {}, source: "" }));
 
 /** Self-destruct timer in seconds. `remaining < 0` means "never expires". */
 export const Lifetime = defineComponent<{ ttl: number; remaining: number }>("Lifetime", () => ({

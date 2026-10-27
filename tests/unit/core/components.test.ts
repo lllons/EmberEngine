@@ -120,6 +120,7 @@ Deno.test("Script defaults to no behaviour", () => {
   const script = Script.create();
   assertEquals(script.name, "");
   assertEquals(script.props, {});
+  assertEquals(script.source, "");
 });
 
 Deno.test("Lifetime defaults to an unset timer", () => {

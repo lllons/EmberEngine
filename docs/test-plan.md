@@ -10,24 +10,24 @@ Tests live in `tests/`, split by what they exercise, and mirror the ownership ta
 
 | Suite directory | Exercises | Type |
 |---|---|---|
-| `tests/unit/math` | vectors, rects, transforms, interpolation | pure |
-| `tests/unit/ecs` | entity lifecycle, component stores, queries | pure |
-| `tests/unit/serialization` | scene save/load, round-trips, version + migration | pure |
-| `tests/unit/core-runtime` | time/fixed-step, RNG determinism, input model, events, diagnostics | pure |
-| `tests/unit/render2d` | draw-list building, sorting, culling, text layout | pure |
-| `tests/unit/camera` | world/screen transforms, follow, clamp, zoom | pure |
-| `tests/unit/backend` | canvas2d command execution against a recording fake canvas | pure |
+| `tests/unit/math` | vectors, rects, transforms, angles, interpolation | pure |
+| `tests/unit/core` | ECS, components, scene model, serialization, colour, time, RNG, input, events, diagnostics | pure |
+| `tests/unit/ecs` | entity lifecycle, component stores, queries (table style) | pure |
+| `tests/unit/render2d` | draw-list building, sorting, culling, camera, text, canvas backend | pure |
 | `tests/unit/render3d` | 3D math, mesh winding, camera projection, culling/shading, mixed 2D+3D order | pure |
-| `tests/unit/runtime` | loop scheduling, pause/step, session lifecycle | pure |
-| `tests/unit/systems` | gravity, movement, AABB collision, platformer control, collect, lifetime | pure |
+| `tests/unit/runtime` | session step order, systems, scripting, host clock, Game wiring, digests | pure |
+| `tests/unit/editor` | empty project, example registry, inline-script example, 3D example frame | pure |
+| `tests/unit/player` | bundle format/validation, loopback server (routing + real socket), player CLI | in-process + socket |
+| `tests/unit/studio` | editor HTTP API: page, game info, scene read/create/save, simulate, reload, logs | in-process with real files |
+| `tests/export` | asset manifest + export bundle structure | pure |
 | `tests/game` | the shipped game: rules, progression, determinism, input-driven playthroughs | headless simulation |
-| `tests/integration/editor` | native editor scene loading, save/reload and project discovery | real I/O, in-process |
-| `tests/integration/cli` | CLI argument routing and exit codes | subprocess |
-| `tests/export` | export bundle generation, inlined scene validity, manifest contents | pure + real compile |
-| `tests/export/e2e` | compiles a real `.exe`, launches it, fetches the served scene | slow, real |
+| `tests/integration` | scene-file round-trips; export -> bundle -> player server -> headless play | real I/O, in-process |
 
-Slow suites (anything invoking `deno compile`) are tagged and excluded from the default
-`deno task test:unit`; they run in `deno task test` and in released builds.
+The suite is fast (well under a minute): `deno compile` is exercised by the export command
+and its self-verification, not by the default test run, so `deno task test` stays usable on
+every save. Export regressions are covered by `tests/integration` up to the compiled binary,
+and the binary itself is checked by `ember export --verify`, which runs the produced `.exe`
+in `--json` and `--headless` modes.
 
 ## Counting
 
@@ -37,22 +37,20 @@ Slow suites (anything invoking `deno compile`) are tagged and excluded from the 
 - `deno task test:report` runs each suite separately and prints a table plus the grand
   total, so the per-suite quota below stays visible in every report.
 
-### Quotas (target counts by suite)
+### Current counts
 
-| Suite | Target | Suite | Target |
-|---|---|---|---|
-| unit/math | 200 | unit/runtime | 80 |
-| unit/ecs | 150 | unit/systems | 120 |
-| unit/serialization | 120 | game | 120 |
-| unit/core-runtime | 120 | integration/editor | 80 |
-| unit/render2d | 150 | integration/cli | 40 |
-| unit/camera | 80 | export | 70 |
-| unit/backend | 60 | export/e2e | 10 |
-| unit/render3d | 80 | | |
-| **Total target** | | | **1480** |
+Measured 2026-10-27 with `deno test -A tests/`:
+
+| Suite | Tests |
+|---|---|
+| `tests/unit` | 1534 |
+| `tests/export` | 28 |
+| `tests/game` | 78 |
+| `tests/integration` | 22 |
+| **Total** | **1662 passing, 0 failing** |
 
 Headroom above 1000 is intentional: it absorbs future feature churn without dropping below
-the requirement.
+the requirement. The number above is what the runner printed, not an estimate.
 
 ## Rules that keep the count honest
 
@@ -71,12 +69,14 @@ the requirement.
 ## Commands
 
 ```bash
-deno task test           # full suite (pure + integration; e2e excluded)
-deno task test:unit      # pure-logic suites only, fastest feedback
-deno task test:game      # headless gameplay tests for games/ember-runner
-deno task test:integration
-deno task test:report    # per-suite counts + grand total
-deno task test:export    # export/packaging; e2e compiles a real .exe
+deno task test              # the whole suite (currently 1662 passing)
+deno task test:unit         # pure/in-process suites only, fastest feedback
+deno task test:game         # headless gameplay tests for games/ember-runner
+deno task test:integration  # scene-file round-trips + export -> player pipeline
+deno task test:report       # per-suite counts + grand total
+
+# equivalent, without the task wrapper
+deno test -A tests/
 ```
 
 CI contract: `deno task test` must be green and the reported total must be >= 1000 before
@@ -84,8 +84,12 @@ a release is cut.
 
 ## Current status
 
-- Foundation pass (vertical slice): suites above exist and run; per-suite counts are printed
-  by `deno task test:report`. Quotas are filled incrementally as modules land, in the order
-  listed in `docs/architecture.md`.
-- `tests/unit/render3d` is in place: 3D math, built-in mesh winding, Camera3D projection,
-  backface/near-plane handling, flat shading, depth order and mixed 2D+3D frame ordering.
+- The suite is above the requirement: **1662 passing, 0 failing**, in about 18 seconds.
+- Covered end to end: core, render2d, render3d, runtime, assets (through export), player
+  bundle + real socket server, studio HTTP API, the shipped game, scene-file round-trips and
+  the export -> bundle -> serve -> headless-play pipeline.
+- Not covered by automated tests: the compiled `.exe`'s browser rendering (checked manually
+  in a browser and by the player's `--json`/`--headless` self-check), the native Win32
+  editor's window interaction (needs a real desktop and input), and GDI rendering.
+- Keep the rule: a feature that lands without tests either gets them in the same change or
+  is listed here as an explicit gap.

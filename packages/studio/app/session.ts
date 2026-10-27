@@ -348,6 +348,9 @@ export class EditorSession {
 
   play(): boolean {
     if (this.mode === "play") return false;
+    // Play what is on screen, not the copy that was on disk when the editor opened: new
+    // scenes and unsaved edits are otherwise not in the game's registry yet.
+    this.game.registerScene(this.sceneName, () => this.scene.clone());
     this.mounted = mountGame({
       mount: this.mount,
       game: this.game,

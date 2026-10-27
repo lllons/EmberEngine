@@ -8,8 +8,8 @@
 import {
   type Entity,
   Parent,
-  RectShape,
   readSceneFile,
+  RectShape,
   Scene,
   sceneFromJson,
   sceneToJson,
@@ -29,14 +29,27 @@ function sampleScene(name = "pipeline"): Scene {
     viewport: { width: 640, height: 360 },
     gravity: vec2(0, 1200),
     background: "#101318",
-    camera: { position: vec2(320, 180), zoom: 1.5, smoothing: 0.2, bounds: { x: 0, y: 0, w: 640, h: 360 } },
+    camera: {
+      position: vec2(320, 180),
+      zoom: 1.5,
+      smoothing: 0.2,
+      bounds: { x: 0, y: 0, w: 640, h: 360 },
+    },
     metadata: { chapter: 2, tags: ["a", "b"] },
   });
   const player = scene.createEntity({ name: "hero", position: vec2(40, 60) });
   scene.world.add(player, Velocity, { x: 12, y: -3, angular: 0.25 });
-  scene.world.add(player, Script, { name: "patrol", props: { speed: 5, steps: [1, 2, 3], nested: { ok: true } } });
+  scene.world.add(player, Script, {
+    name: "patrol",
+    props: { speed: 5, steps: [1, 2, 3], nested: { ok: true } },
+  });
   scene.world.add(player, Tag, { value: "player" });
-  const crate = scene.createEntity({ name: "crate", position: vec2(200, 100), rotation: 0.5, scale: vec2(2, 3) });
+  const crate = scene.createEntity({
+    name: "crate",
+    position: vec2(200, 100),
+    rotation: 0.5,
+    scale: vec2(2, 3),
+  });
   scene.world.add(crate, RectShape, { width: 24, height: 24, color: "#ff7a2f", layer: 3 });
   scene.world.add(crate, Parent, { entity: player });
   return scene;
@@ -97,7 +110,9 @@ Deno.test("integration/scene drops a dangling parent link with a warning", () =>
   const data = JSON.parse(sceneToJson(sampleScene()));
   data.entities[1].components.Parent.entity = 999;
   const warnings: string[] = [];
-  const scene = sceneFromJson(JSON.stringify(data), { onWarning: (message) => warnings.push(message) });
+  const scene = sceneFromJson(JSON.stringify(data), {
+    onWarning: (message) => warnings.push(message),
+  });
   const child = scene.world.entities()[1];
   assertEqual(scene.world.get(child, Parent), undefined, "link removed");
   assertEqual(warnings.length, 1, "one warning");
@@ -108,7 +123,9 @@ Deno.test("integration/scene removes a self-parent link with a warning", () => {
   const data = JSON.parse(sceneToJson(sampleScene()));
   data.entities[1].components.Parent.entity = 2;
   const warnings: string[] = [];
-  const scene = sceneFromJson(JSON.stringify(data), { onWarning: (message) => warnings.push(message) });
+  const scene = sceneFromJson(JSON.stringify(data), {
+    onWarning: (message) => warnings.push(message),
+  });
   const child = scene.world.entities()[1];
   assertEqual(scene.world.get(child, Parent), undefined, "link removed");
   assert(warnings.some((warning) => warning.includes("own parent")), `warnings: ${warnings}`);
@@ -118,7 +135,9 @@ Deno.test("integration/scene skips an unknown component and keeps the rest", () 
   const data = JSON.parse(sceneToJson(sampleScene()));
   data.entities[0].components.NotAComponent = { whatever: true };
   const warnings: string[] = [];
-  const scene = sceneFromJson(JSON.stringify(data), { onWarning: (message) => warnings.push(message) });
+  const scene = sceneFromJson(JSON.stringify(data), {
+    onWarning: (message) => warnings.push(message),
+  });
   assertEqual(scene.entityCount, 2, "entities kept");
   assert(scene.world.get(1 as Entity, Tag) !== undefined, "known components kept");
   assert(warnings.some((warning) => warning.includes("NotAComponent")), "warning names it");
@@ -134,7 +153,9 @@ Deno.test("integration/scene migrates an unversioned document and warns", () => 
   const data = JSON.parse(sceneToJson(sampleScene()));
   delete data.version;
   const warnings: string[] = [];
-  const scene = sceneFromJson(JSON.stringify(data), { onWarning: (message) => warnings.push(message) });
+  const scene = sceneFromJson(JSON.stringify(data), {
+    onWarning: (message) => warnings.push(message),
+  });
   assertEqual(scene.entityCount, 2, "loaded");
   assert(warnings.some((warning) => warning.includes("migrated")), `warnings: ${warnings}`);
 });
@@ -207,7 +228,12 @@ Deno.test("integration/scene save → load → save keeps the digest after simul
     await writeSceneFile(second, loaded);
     const reloaded = await readSceneFile(second);
     assertEqual(sceneDigest(reloaded), sceneDigest(loaded), "digest after the full loop");
-    near(reloaded.world.require(1 as Entity, Transform).position.x, 40 + 12 * 30 / 60, 1e-9, "moved position kept");
+    near(
+      reloaded.world.require(1 as Entity, Transform).position.x,
+      40 + 12 * 30 / 60,
+      1e-9,
+      "moved position kept",
+    );
   });
 });
 
@@ -215,7 +241,10 @@ Deno.test("integration/scene a 500-entity scene survives the file round-trip", a
   await inTempDir(async (directory) => {
     const scene = new Scene({ name: "many", viewport: { width: 320, height: 240 } });
     for (let index = 0; index < 500; index++) {
-      const entity = scene.createEntity({ name: `e${index}`, position: vec2(index % 40, Math.floor(index / 40)) });
+      const entity = scene.createEntity({
+        name: `e${index}`,
+        position: vec2(index % 40, Math.floor(index / 40)),
+      });
       scene.world.add(entity, Tag, { value: `tag-${index}` });
     }
     const path = joinPath(directory, "many.emberscene");
