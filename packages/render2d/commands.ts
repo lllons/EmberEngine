@@ -69,7 +69,7 @@ export interface SpriteCommand {
   height: number;
   texture: string;
   uv: UvRect;
-  /** Colour multiplied over the texture; `#ffffff` draws it unmodified. */
+  /** Colour multiplied over the texture; `Colors.white` (the theme's white) draws it unmodified. */
   tint: Color;
   alpha: number;
   rotation: number;

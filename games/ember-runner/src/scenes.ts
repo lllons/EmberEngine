@@ -10,7 +10,7 @@
  * bundles what is on disk. Regenerating keeps the code path and the files in sync.
  */
 
-import { Colors, rect, type Scene, Scene as SceneClass, type Size, vec2 } from "@ember/core";
+import { Colors, rect, type Scene, Scene as SceneClass, type Size, Tag, Theme, vec2 } from "@ember/core";
 import {
   createBackdrop,
   createEmber,
@@ -21,6 +21,7 @@ import {
   createPlayer,
   createText,
   createTitleTrigger,
+  OVERLAY_BOTTOM,
 } from "./entities.ts";
 import { LEVEL_ONE, LEVEL_TWO, TITLE_SCENE } from "./names.ts";
 
@@ -130,9 +131,9 @@ export function levelSpec(name: string): LevelSpec | undefined {
 /** Parallax bands behind the level so camera movement is readable. */
 function addBackdrop(scene: Scene, spec: LevelSpec): number {
   const bands = [
-    { color: "#0c1018", y: 120, h: 240, step: 480 },
-    { color: "#141b2b", y: 210, h: 180, step: 620 },
-    { color: "#1b2030", y: 320, h: 200, step: 760 },
+    { color: Theme.panelDeep, y: 120, h: 240, step: 480 },
+    { color: Theme.panel, y: 210, h: 180, step: 620 },
+    { color: Theme.header, y: 320, h: 200, step: 760 },
   ];
   let created = 0;
   for (const [index, band] of bands.entries()) {
@@ -182,11 +183,15 @@ export function buildLevelScene(spec: LevelSpec): Scene {
     align: "center",
     color: Colors.gold,
   });
-  createText(scene, "controls", VIEWPORT.width / 2, VIEWPORT.height - 22, "←/→ or A/D move · ↑/space jump · R restart", {
-    size: 14,
-    color: Colors.grey,
-    layer: 1000,
-  });
+  const controls = createText(
+    scene,
+    "controls",
+    VIEWPORT.width / 2,
+    VIEWPORT.height - 22,
+    "←/→ or A/D move · ↑/space jump · R restart",
+    { size: 14, color: Colors.grey, layer: 1000 },
+  );
+  scene.world.add(controls, Tag, { value: OVERLAY_BOTTOM });
 
   return scene;
 }
@@ -196,7 +201,7 @@ export function buildTitleScene(): Scene {
   const scene = new SceneClass({
     name: TITLE_SCENE,
     gravity: vec2(0, 0),
-    background: "#080a10",
+    background: Theme.background,
     viewport: VIEWPORT,
     camera: {
       position: vec2(VIEWPORT.width / 2, VIEWPORT.height / 2),
@@ -207,7 +212,7 @@ export function buildTitleScene(): Scene {
     metadata: { title: GAME_TITLE },
   });
 
-  createBackdrop(scene, VIEWPORT.width / 2, 150, 620, 320, "#121a2b", -10);
+  createBackdrop(scene, VIEWPORT.width / 2, 246, 620, 392, Theme.header, -10);
   createText(scene, "title", VIEWPORT.width / 2, 170, "EMBER RUNNER", {
     size: 54,
     color: Colors.ember,

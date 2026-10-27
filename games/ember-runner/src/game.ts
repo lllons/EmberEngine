@@ -16,6 +16,7 @@ import {
   Scene,
   Tag,
   TextLabel,
+  Theme,
   vec2,
   Velocity,
 } from "@ember/core";
@@ -143,7 +144,7 @@ function addScenery(scene: Scene): void {
     scene.world.add(entity, RectShape, {
       width: hill.w,
       height: hill.h,
-      color: index % 2 === 0 ? Colors.slate : "#151b28",
+      color: index % 2 === 0 ? Colors.slate : Theme.header,
       layer: -50,
       filled: true,
       alpha: 0.9,

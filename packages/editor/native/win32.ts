@@ -10,6 +10,7 @@
  * back into editor state directly.
  */
 
+import { Theme } from "@ember/core";
 import { GdiCanvas } from "./gdi.ts";
 
 export const WM_PAINT = 0x000f;
@@ -279,6 +280,11 @@ export class Win32Window {
 
   /** Processes every pending message; returns false once the window has closed. */
   pump(): boolean {
+    // Keep this loop unoptimized. V8 cannot lazily deopt a frame that just returned
+    // from a fast FFI call, and window callbacks routinely mutate state the optimized
+    // loop depends on (denoland/deno#31122). A direct eval is the supported way to
+    // mark a function as never-optimize without V8 intrinsics.
+    eval("");
     while (
       this.user32.symbols.PeekMessageW(use.of(this.messageBuffer), null, 0, 0, 1) // PM_REMOVE
     ) {
@@ -391,8 +397,8 @@ export class Win32Window {
     try {
       this.options.onPaint(canvas, size.width, size.height);
       if (this.paintError) {
-        canvas.fillRect(0, 0, size.width, 24, "#5a1622");
-        canvas.text(8, 4, this.paintError, 12, "#ffd7de");
+        canvas.fillRect(0, 0, size.width, 24, Theme.dangerSoft);
+        canvas.text(8, 4, this.paintError, 12, Theme.dangerLight);
         this.paintError = null;
       }
     } catch (error) {

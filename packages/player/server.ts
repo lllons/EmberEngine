@@ -8,6 +8,7 @@
  * executable, so an export runs with no files beside it.
  */
 
+import { Theme } from "@ember/core";
 import type { PlayerBundle } from "./bundle.ts";
 import { bundleSceneNames, describeBundle } from "./bundle.ts";
 
@@ -126,9 +127,9 @@ export function playerPageHtml(bundle: PlayerBundle): string {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${title}</title>
 <style>
-  html, body { margin: 0; height: 100%; background: #05070c; color: #e7ecf6; }
+  html, body { margin: 0; height: 100%; background: ${Theme.background}; color: ${Theme.text}; }
   #boot { position: fixed; inset: 0; display: grid; place-items: center; font: 14px 'Segoe UI', system-ui, sans-serif; }
-  #boot p { color: #8b93a7; }
+  #boot p { color: ${Theme.muted}; }
 </style>
 </head>
 <body>

@@ -84,6 +84,10 @@ export function scriptSystem(options: ScriptSystemOptions = {}): System {
   const inlineFactories = new Map<string, ScriptFactory>();
   const failed = new Map<Entity, string>();
   const reported = new Set<string>();
+  // Entity ids are per-world and start again at 1 in every scene, so behaviour state must be
+  // dropped when the session swaps worlds. Keeping it re-attached a menu script to an
+  // unrelated level entity that happened to share its id.
+  let currentWorld: World | null = null;
 
   const reportOnce = (
     ctx: SystemContext,
@@ -101,6 +105,12 @@ export function scriptSystem(options: ScriptSystemOptions = {}): System {
 
   return defineSystem("scripts", (ctx) => {
     const world = ctx.scene.world;
+    if (world !== currentWorld) {
+      currentWorld = world;
+      running.clear();
+      failed.clear();
+      reported.clear();
+    }
     const contextFor = (entity: Entity, props: Record<string, unknown>): ScriptContext => ({
       ...ctx,
       entity,

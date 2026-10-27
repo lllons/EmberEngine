@@ -5,9 +5,9 @@
  * exported page only needs to fetch its bundle and start: no build step in the browser.
  */
 
-import { type TextureSources, buildTextures } from "@ember/assets";
-import type { Scene } from "@ember/core";
-import { type Game } from "@ember/runtime";
+import { buildTextures, type TextureSources } from "@ember/assets";
+import { type Scene, Theme } from "@ember/core";
+import type { Game } from "@ember/runtime";
 import type { PlayerBundle } from "../bundle.ts";
 import { scenesFromBundle } from "../bundle.ts";
 import { createDomCanvasFactory } from "./canvas-factory.ts";
@@ -70,8 +70,8 @@ export async function startBrowserGame(options: BootstrapOptions): Promise<Boots
   // The exported page ships a "loading…" placeholder; the shell now covers it, so drop it.
   (globalThis as unknown as { document?: Document }).document?.getElementById("boot")?.remove();
 
-  window.addEventListener("resize", () => mounted.resize());
-  (window as unknown as { emberPlayer?: unknown }).emberPlayer = {
+  globalThis.addEventListener("resize", () => mounted.resize());
+  (globalThis as unknown as { emberPlayer?: unknown }).emberPlayer = {
     mounted,
     session: mounted.session,
     stop: () => mounted.stop(),
@@ -99,26 +99,32 @@ interface Shell {
 function buildShell(bundle: PlayerBundle, options: BootstrapOptions): Shell {
   const root = options.mount ?? document.createElement("div");
   root.id = "ember-player";
-  Object.assign(root.style, {
-    position: "fixed",
-    inset: "0",
-    display: "flex",
-    flexDirection: "column",
-    background: "#05070c",
-    color: "#e7ecf6",
-    font: "13px/1.4 'Segoe UI', system-ui, sans-serif",
-    overflow: "hidden",
-  } satisfies Partial<CSSStyleDeclaration>);
+  Object.assign(
+    root.style,
+    {
+      position: "fixed",
+      inset: "0",
+      display: "flex",
+      flexDirection: "column",
+      background: Theme.background,
+      color: Theme.text,
+      font: "13px/1.4 'Segoe UI', system-ui, sans-serif",
+      overflow: "hidden",
+    } satisfies Partial<CSSStyleDeclaration>,
+  );
 
   const bar = document.createElement("div");
-  Object.assign(bar.style, {
-    display: "flex",
-    gap: "12px",
-    alignItems: "center",
-    padding: "6px 12px",
-    background: "#0d1220",
-    borderBottom: "1px solid #1e2740",
-  } satisfies Partial<CSSStyleDeclaration>);
+  Object.assign(
+    bar.style,
+    {
+      display: "flex",
+      gap: "12px",
+      alignItems: "center",
+      padding: "6px 12px",
+      background: Theme.header,
+      borderBottom: `1px solid ${Theme.border}`,
+    } satisfies Partial<CSSStyleDeclaration>,
+  );
 
   const title = document.createElement("span");
   title.textContent = `${bundle.game.title}`;
@@ -126,22 +132,25 @@ function buildShell(bundle: PlayerBundle, options: BootstrapOptions): Shell {
 
   const hint = document.createElement("span");
   hint.textContent = "arrows / WASD · space · click";
-  hint.style.color = "#8b93a7";
+  hint.style.color = Theme.muted;
 
   const status = document.createElement("span");
   status.style.marginLeft = "auto";
-  status.style.color = "#8b93a7";
+  status.style.color = Theme.muted;
 
   bar.append(title, hint, status);
   const stage = document.createElement("div");
-  Object.assign(stage.style, {
-    flex: "1",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    position: "relative",
-  } satisfies Partial<CSSStyleDeclaration>);
+  Object.assign(
+    stage.style,
+    {
+      flex: "1",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      position: "relative",
+    } satisfies Partial<CSSStyleDeclaration>,
+  );
   root.append(bar, stage);
   if (!options.mount) document.body.append(root);
   return { root, stage, title, status };

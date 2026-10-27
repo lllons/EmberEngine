@@ -13,7 +13,7 @@
  * the workspace type-checks under Deno's lib rather than `lib.dom`.
  */
 
-import { type InputSnapshot, InputTracker, type Size } from "@ember/core";
+import { type InputSnapshot, InputTracker, type Size, Theme } from "@ember/core";
 import { type Context2D, createCanvas2DRenderer } from "@ember/render2d";
 import type { RuntimeHost } from "@ember/runtime";
 
@@ -117,7 +117,7 @@ export function startPlayer(setup: PlayerSetup, options: PlayerOptions = {}): Pl
   const renderer = createCanvas2DRenderer(context, {
     width: viewport.width,
     height: viewport.height,
-    placeholderColor: "#ff00ff",
+    placeholderColor: Theme.danger,
   });
   const tracker = new InputTracker();
   const reportUrl = options.reportUrl ?? "/api/frame";

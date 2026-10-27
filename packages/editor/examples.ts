@@ -14,6 +14,7 @@ import {
   RectShape,
   Scene,
   Script,
+  Theme,
   Transform,
   Transform3D,
   TextLabel,
@@ -141,7 +142,7 @@ export function createEmptyGame(): Game {
 export function createScriptingGame(): Game {
   const scene = new Scene({
     name: "scripting-playground",
-    background: "#090d16",
+    background: Theme.background,
     viewport: { ...VIEWPORT },
     camera: {
       position: vec2(VIEWPORT.width / 2, VIEWPORT.height / 2),
@@ -164,7 +165,7 @@ export function createScriptingGame(): Game {
     position: vec3(0, 0, 0),
     scale: vec3(118, 118, 118),
   });
-  scene.world.add(cube, MeshRenderer, { mesh: "cube", color: Colors.skyDeep, layer: -5 });
+  scene.world.add(cube, MeshRenderer, { mesh: "cube", color: Colors.sky, layer: -5 });
   scene.world.add(cube, Script, { name: "editor.spin3d", props: { radiansPerSecond: 0.55 } });
 
   const title = scene.createEntity({ name: "Title", position: vec2(480, 56) });
@@ -239,7 +240,7 @@ export function createScriptingGame(): Game {
 export function create3DGame(): Game {
   const scene = new Scene({
     name: "3d-showcase",
-    background: "#070a10",
+    background: Theme.background,
     viewport: { ...VIEWPORT },
     camera: {
       position: vec2(480, 270),
@@ -267,7 +268,7 @@ export function create3DGame(): Game {
   const pieces: Array<[string, string, ReturnType<typeof vec3>, ReturnType<typeof vec3>, string]> = [
     ["Cube A", "cube", vec3(-120, 0, 0), vec3(110, 110, 110), Colors.ember],
     ["Cube B", "cube", vec3(0, 60, -40), vec3(80, 80, 80), Colors.gold],
-    ["Cube C", "cube", vec3(125, -10, 20), vec3(100, 100, 100), Colors.skyDeep],
+    ["Cube C", "cube", vec3(125, -10, 20), vec3(100, 100, 100), Colors.sky],
     ["Pyramid", "pyramid", vec3(0, -55, 90), vec3(100, 100, 100), Colors.grass],
     ["Triangle", "triangle", vec3(150, 70, -100), vec3(75, 75, 75), Colors.hazard],
   ];

@@ -9,6 +9,7 @@
 
 import {
   BoxCollider,
+  Colors,
   RigidBody,
   Sprite,
   TextLabel,
@@ -233,10 +234,10 @@ export function registerRunnerScripts(registry: ScriptRegistry): ScriptRegistry 
         if (!label) return;
         const state = runStateOf(ctx);
         const colour = state.status === "dead"
-          ? "#e5484d"
+          ? Colors.hazard
           : state.status === "won"
-          ? "#5ec27a"
-          : "#ffc857";
+          ? Colors.white
+          : Colors.gold;
         const text = `score ${state.score}  ·  best ${state.best}  ·  ${state.lives} ♥  ·  ` +
           `${state.time.toFixed(1)}s  ·  ${state.message}`;
         if (label.text !== text || label.color !== colour) {

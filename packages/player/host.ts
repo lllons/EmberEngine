@@ -6,9 +6,11 @@
  * URL, and records the frame reports the page posts back so the CLI and the tests can
  * prove a frame was actually painted.
  *
- * Deliberately free of engine imports: the exported `.exe` compiles this file with
- * `deno compile`, so it must stay small and dependency-free.
+ * Depends only on the dependency-free theme module: the exported `.exe` compiles this file
+ * with `deno compile`, so it must stay small.
  */
+
+import { Theme } from "@ember/core";
 
 export interface PlayerHostOptions {
   title: string;
@@ -61,17 +63,17 @@ export function playerHtml(title: string, width: number, height: number): string
 <title>${escapeHtml(title)}</title>
 <style>
   :root { color-scheme: dark; }
-  html, body { margin: 0; height: 100%; background: #0b0d12; color: #c9d1e3;
+  html, body { margin: 0; height: 100%; background: ${Theme.background}; color: ${Theme.text};
     font: 13px/1.4 "Segoe UI", system-ui, sans-serif; }
   body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
   header { display: flex; gap: 10px; align-items: baseline; opacity: .85; }
-  header b { color: #ff7a2f; letter-spacing: .04em; }
+  header b { color: ${Theme.accent}; letter-spacing: .04em; }
   canvas { width: min(96vw, ${width}px); height: auto; aspect-ratio: ${width} / ${height};
-    background: #10131a; border-radius: 6px; box-shadow: 0 12px 40px rgba(0,0,0,.55);
-    outline: 1px solid #232a3a; }
+    background: ${Theme.panel}; border-radius: 6px; box-shadow: 0 12px 40px rgba(0,0,0,.55);
+    outline: 1px solid ${Theme.border}; }
   footer { opacity: .55; font-size: 12px; }
   #error { display: none; max-width: min(92vw, ${width}px); padding: 10px 12px; border-radius: 6px;
-    background: #35121a; border: 1px solid #7a2436; color: #ffb3c0; white-space: pre-wrap;
+    background: ${Theme.dangerSoft}; border: 1px solid ${Theme.dangerDeep}; color: ${Theme.dangerLight}; white-space: pre-wrap;
     font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
   #error.on { display: block; }
 </style>

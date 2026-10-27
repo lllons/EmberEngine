@@ -6,6 +6,8 @@
  * stay short enough to read.
  */
 
+import { Theme } from "@ember/core";
+
 type Child = Node | string | null | undefined | false;
 
 export interface ElementOptions {
@@ -164,7 +166,7 @@ export function cssHex(value: string): string {
       .join("");
     return `#${hex}`;
   }
-  return "#ffffff";
+  return Theme.highlight;
 }
 
 export function jsonArea(
@@ -179,7 +181,7 @@ export function jsonArea(
       onCommit(JSON.parse(area.value));
       area.style.borderColor = "";
     } catch {
-      area.style.borderColor = "#e5484d";
+      area.style.borderColor = Theme.danger;
     }
   });
   return area;

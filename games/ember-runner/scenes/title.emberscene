@@ -7,7 +7,7 @@
       "x": 0,
       "y": 0
     },
-    "background": "#080a10",
+    "background": "#050505",
     "viewport": {
       "width": 960,
       "height": 540
@@ -52,8 +52,8 @@
         },
         "RectShape": {
           "width": 620,
-          "height": 320,
-          "color": "#121a2b",
+          "height": 392,
+          "color": "#171717",
           "layer": -10,
           "filled": true,
           "strokeWidth": 1,
@@ -62,7 +62,7 @@
         "Transform": {
           "position": {
             "x": 480,
-            "y": 150
+            "y": 246
           },
           "rotation": 0,
           "scale": {
@@ -109,7 +109,7 @@
         "TextLabel": {
           "text": "a tiny 2D platformer built with EmberEngine",
           "size": 18,
-          "color": "#8b93a7",
+          "color": "#9a9a9a",
           "align": "center",
           "baseline": "middle",
           "layer": 20,
@@ -137,7 +137,7 @@
         "TextLabel": {
           "text": "collect the embers · reach the gate · avoid the spikes",
           "size": 20,
-          "color": "#ffc857",
+          "color": "#ff7a2f",
           "align": "center",
           "baseline": "middle",
           "layer": 20,
@@ -165,7 +165,7 @@
         "TextLabel": {
           "text": "press ENTER (or click) to run",
           "size": 22,
-          "color": "#ffffff",
+          "color": "#f5f5f5",
           "align": "center",
           "baseline": "middle",
           "layer": 20,
@@ -194,7 +194,8 @@
           "name": "runner.title",
           "props": {
             "target": "level-1"
-          }
+          },
+          "source": ""
         },
         "Transform": {
           "position": {

@@ -8,6 +8,7 @@
 export * from "./math.ts";
 export * from "./math3d.ts";
 export * from "./color.ts";
+export * from "./theme.ts";
 export * from "./ecs.ts";
 export * from "./components.ts";
 export * from "./scene.ts";

@@ -7,10 +7,10 @@
  * live in `@ember/runtime`.
  */
 
-import { Tag, Transform, type Entity, type Scene, rectFromCenter, vec2 } from "@ember/core";
-import { type System, SystemOrder, defineSystem } from "@ember/runtime";
-import { createEmber, createHazard } from "./entities.ts";
-import { RESTART, type RunState, RUN_STATE } from "./state.ts";
+import { type Entity, rectFromCenter, type Scene, Tag, Transform, vec2 } from "@ember/core";
+import { defineSystem, type System, SystemOrder } from "@ember/runtime";
+import { createEmber, createHazard, OVERLAY_BOTTOM, OVERLAY_TOP } from "./entities.ts";
+import { RESTART, RUN_STATE, type RunState } from "./state.ts";
 
 const SPAWNED_TAG = "spawned";
 
@@ -24,7 +24,8 @@ function runStateOf(ctx: { services: Record<string, unknown> }): RunState {
 export function timerSystem(limitSeconds = 120): System {
   return defineSystem("runner.timer", (ctx) => {
     const run = runStateOf(ctx);
-    if (run.status !== "playing") return;
+    // Menus have no runner, so idling on the title must not age the run or score it.
+    if (run.status !== "playing" || ctx.api.entitiesWithTag("player").length === 0) return;
     run.time += ctx.dt;
     if (run.time >= limitSeconds) {
       run.status = "dead";
@@ -39,7 +40,7 @@ export function timerSystem(limitSeconds = 120): System {
 export function survivalScoreSystem(pointsPerSecond = 4): System {
   return defineSystem("runner.survival", (ctx) => {
     const run = runStateOf(ctx);
-    if (run.status !== "playing") return;
+    if (run.status !== "playing" || ctx.api.entitiesWithTag("player").length === 0) return;
     const before = Math.floor((run.time - ctx.dt) * pointsPerSecond);
     const after = Math.floor(run.time * pointsPerSecond);
     if (after > before) run.score += after - before;
@@ -134,6 +135,26 @@ export function cleanupSystem(area: { x: number; y: number; w: number; h: number
   }, SystemOrder.lifetime + 1);
 }
 
+/**
+ * Keeps overlay text on screen: the HUD and the hint line are screen furniture, not level
+ * geometry, so a camera that follows the runner must not carry them away. The entity's own
+ * x is ignored; only the tag decides the anchor.
+ */
+export function overlaySystem(): System {
+  return defineSystem("runner.overlay", (ctx) => {
+    const camera = ctx.camera.state.position;
+    const half = ctx.camera.viewport.height / 2;
+    for (const [tag, y] of [[OVERLAY_TOP, camera.y - half + 28], [OVERLAY_BOTTOM, camera.y + half - 22]] as const) {
+      for (const entity of ctx.api.entitiesWithTag(tag)) {
+        const transform = ctx.scene.world.get(entity, Transform);
+        if (!transform) continue;
+        transform.position.x = camera.x;
+        transform.position.y = y;
+      }
+    }
+  }, SystemOrder.camera + 1);
+}
+
 /** The runner's own systems, in registration order (stable ties break on name). */
 export function runnerSystems(): System[] {
   return [
@@ -141,6 +162,7 @@ export function runnerSystems(): System[] {
     survivalScoreSystem(),
     restartSystem(),
     spawnerSystem(),
+    overlaySystem(),
   ];
 }
 

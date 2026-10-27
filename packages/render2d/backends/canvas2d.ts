@@ -8,6 +8,7 @@
  * pass a recording fake and so the module stays usable in non-DOM runtimes.
  */
 
+import { Colors, Theme } from "@ember/core";
 import type { DrawCommand, ShapeCommand } from "../commands.ts";
 
 export interface Context2D {
@@ -83,7 +84,7 @@ export interface RenderStats {
   skippedStateChanges: number;
 }
 
-const DEFAULT_PLACEHOLDER = "#ff00ff";
+const DEFAULT_PLACEHOLDER = Theme.danger;
 
 /**
  * Creates a stateless-ish renderer bound to one context. Safe to reuse for every frame;
@@ -206,7 +207,7 @@ export function createCanvas2DRenderer(
         ctx.drawImage(texture.image, dx, dy, command.width, command.height);
       }
     } else {
-      ctx.fillStyle = command.tint === "#ffffff" ? placeholderColor : command.tint;
+      ctx.fillStyle = command.tint === Colors.white ? placeholderColor : command.tint;
       ctx.fillRect(dx, dy, command.width, command.height);
     }
     if (needsTransform || needsAlpha) ctx.restore();

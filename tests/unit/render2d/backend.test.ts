@@ -6,6 +6,7 @@
  */
 
 import { assert, assertEquals } from "@std/assert";
+import { Colors, Theme } from "@ember/core";
 import {
   type CircleCommand,
   type Context2D,
@@ -120,7 +121,7 @@ function sprite(overrides: Partial<SpriteCommand> = {}): SpriteCommand {
     height: 16,
     texture: "coin",
     uv: { u0: 0, v0: 0, u1: 1, v1: 1 },
-    tint: "#ffffff",
+    tint: Colors.white,
     alpha: 1,
     rotation: 0,
     anchorX: 0.5,
@@ -287,14 +288,14 @@ Deno.test("a missing texture falls back to a placeholder box", () => {
   const { calls, ctx } = harness();
   renderCommands(ctx, [sprite({ texture: "missing" })], { resolveTexture: () => undefined });
   assertEquals(calls, ["fillRect(24,52,32,16)"]);
-  assertEquals(ctx.fillStyle, "#ff00ff");
+  assertEquals(ctx.fillStyle, Theme.danger);
 });
 
 Deno.test("a sprite with no texture key is a placeholder too", () => {
   const { calls, ctx } = harness();
   renderCommands(ctx, [sprite({ texture: "" })]);
   assertEquals(calls, ["fillRect(24,52,32,16)"]);
-  assertEquals(ctx.fillStyle, "#ff00ff");
+  assertEquals(ctx.fillStyle, Theme.danger);
 });
 
 Deno.test("the placeholder colour is configurable", () => {

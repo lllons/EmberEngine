@@ -32,10 +32,15 @@ import {
   TITLE_SCRIPT,
 } from "./scripts.ts";
 
+
 export const PLAYER_TAG = "player";
 export const COIN_TAG = "coin";
 export const HAZARD_TAG = "hazard";
 export const GOAL_TAG = "goal";
+
+/** Tags the overlay system uses to pin text to the camera instead of the world. */
+export const OVERLAY_TOP = "overlay:top";
+export const OVERLAY_BOTTOM = "overlay:bottom";
 
 export interface PlayerOptions {
   speed?: number;
@@ -184,6 +189,7 @@ export function createHudLine(
     layer: 1000,
   });
   world.add(entity, Script, { name: HUD_SCRIPT, props: { line: name } });
+  world.add(entity, Tag, { value: OVERLAY_TOP });
   return entity;
 }
 

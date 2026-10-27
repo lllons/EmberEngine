@@ -6,7 +6,7 @@
  * a JSON editor built from its live value, so new components are inspectable for free.
  */
 
-import { componentByName, componentNames } from "@ember/core";
+import { componentByName, componentNames, Theme } from "@ember/core";
 import {
   button,
   checkbox,
@@ -236,7 +236,7 @@ function renderField(
     case "color":
       return row(
         field.label,
-        colorField(String(current ?? "#ffffff"), (next) => callbacks.onField(componentName, field.path, next)),
+        colorField(String(current ?? Theme.highlight), (next) => callbacks.onField(componentName, field.path, next)),
       );
     case "bool":
       return row(

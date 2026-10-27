@@ -7,7 +7,7 @@
       "x": 0,
       "y": 1900
     },
-    "background": "#10131a",
+    "background": "#050505",
     "viewport": {
       "width": 960,
       "height": 540
@@ -58,7 +58,7 @@
         "RectShape": {
           "width": 384,
           "height": 240,
-          "color": "#0c1018",
+          "color": "#0a0a0a",
           "layer": -20,
           "filled": true,
           "strokeWidth": 1,
@@ -86,7 +86,7 @@
         "RectShape": {
           "width": 384,
           "height": 240,
-          "color": "#0c1018",
+          "color": "#0a0a0a",
           "layer": -20,
           "filled": true,
           "strokeWidth": 1,
@@ -114,7 +114,7 @@
         "RectShape": {
           "width": 384,
           "height": 240,
-          "color": "#0c1018",
+          "color": "#0a0a0a",
           "layer": -20,
           "filled": true,
           "strokeWidth": 1,
@@ -142,7 +142,7 @@
         "RectShape": {
           "width": 384,
           "height": 240,
-          "color": "#0c1018",
+          "color": "#0a0a0a",
           "layer": -20,
           "filled": true,
           "strokeWidth": 1,
@@ -170,7 +170,7 @@
         "RectShape": {
           "width": 384,
           "height": 240,
-          "color": "#0c1018",
+          "color": "#0a0a0a",
           "layer": -20,
           "filled": true,
           "strokeWidth": 1,
@@ -198,7 +198,7 @@
         "RectShape": {
           "width": 496,
           "height": 180,
-          "color": "#141b2b",
+          "color": "#111111",
           "layer": -19,
           "filled": true,
           "strokeWidth": 1,
@@ -226,7 +226,7 @@
         "RectShape": {
           "width": 496,
           "height": 180,
-          "color": "#141b2b",
+          "color": "#111111",
           "layer": -19,
           "filled": true,
           "strokeWidth": 1,
@@ -254,7 +254,7 @@
         "RectShape": {
           "width": 496,
           "height": 180,
-          "color": "#141b2b",
+          "color": "#111111",
           "layer": -19,
           "filled": true,
           "strokeWidth": 1,
@@ -282,7 +282,7 @@
         "RectShape": {
           "width": 496,
           "height": 180,
-          "color": "#141b2b",
+          "color": "#111111",
           "layer": -19,
           "filled": true,
           "strokeWidth": 1,
@@ -310,7 +310,7 @@
         "RectShape": {
           "width": 608,
           "height": 200,
-          "color": "#1b2030",
+          "color": "#171717",
           "layer": -18,
           "filled": true,
           "strokeWidth": 1,
@@ -338,7 +338,7 @@
         "RectShape": {
           "width": 608,
           "height": 200,
-          "color": "#1b2030",
+          "color": "#171717",
           "layer": -18,
           "filled": true,
           "strokeWidth": 1,
@@ -366,7 +366,7 @@
         "RectShape": {
           "width": 608,
           "height": 200,
-          "color": "#1b2030",
+          "color": "#171717",
           "layer": -18,
           "filled": true,
           "strokeWidth": 1,
@@ -414,7 +414,7 @@
           "texture": "ground",
           "width": 2400,
           "height": 80,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 5,
           "flipX": false,
@@ -455,7 +455,7 @@
         "RectShape": {
           "width": 40,
           "height": 400,
-          "color": "#1b2030",
+          "color": "#111111",
           "layer": 5,
           "filled": true,
           "strokeWidth": 1,
@@ -502,7 +502,7 @@
         "RectShape": {
           "width": 40,
           "height": 400,
-          "color": "#1b2030",
+          "color": "#111111",
           "layer": 5,
           "filled": true,
           "strokeWidth": 1,
@@ -558,7 +558,7 @@
           "texture": "ground",
           "width": 220,
           "height": 24,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 5,
           "flipX": false,
@@ -608,7 +608,7 @@
           "texture": "ground",
           "width": 200,
           "height": 24,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 5,
           "flipX": false,
@@ -658,7 +658,7 @@
           "texture": "ground",
           "width": 220,
           "height": 24,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 5,
           "flipX": false,
@@ -708,7 +708,7 @@
           "texture": "ground",
           "width": 240,
           "height": 24,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 5,
           "flipX": false,
@@ -758,7 +758,7 @@
           "texture": "ground",
           "width": 220,
           "height": 24,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 5,
           "flipX": false,
@@ -808,7 +808,7 @@
           "texture": "ground",
           "width": 200,
           "height": 24,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 5,
           "flipX": false,
@@ -851,13 +851,14 @@
           "props": {
             "points": 25,
             "bounce": 0.5
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "coin",
           "width": 18,
           "height": 18,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -908,13 +909,14 @@
           "props": {
             "points": 25,
             "bounce": 0.5
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "coin",
           "width": 18,
           "height": 18,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -965,13 +967,14 @@
           "props": {
             "points": 25,
             "bounce": 0.5
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "coin",
           "width": 18,
           "height": 18,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1022,13 +1025,14 @@
           "props": {
             "points": 25,
             "bounce": 0.5
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "coin",
           "width": 18,
           "height": 18,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1079,13 +1083,14 @@
           "props": {
             "points": 25,
             "bounce": 0.5
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "coin",
           "width": 18,
           "height": 18,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1136,13 +1141,14 @@
           "props": {
             "points": 25,
             "bounce": 0.5
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "coin",
           "width": 18,
           "height": 18,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1193,13 +1199,14 @@
           "props": {
             "points": 25,
             "bounce": 0.5
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "coin",
           "width": 18,
           "height": 18,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1250,13 +1257,14 @@
           "props": {
             "points": 25,
             "bounce": 0.5
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "coin",
           "width": 18,
           "height": 18,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1316,13 +1324,14 @@
             "patrol": 60,
             "speed": 80,
             "direction": 1
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "hazard",
           "width": 26,
           "height": 26,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1382,13 +1391,14 @@
             "patrol": 80,
             "speed": 80,
             "direction": 1
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "hazard",
           "width": 26,
           "height": 26,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1448,13 +1458,14 @@
             "patrol": 70,
             "speed": 80,
             "direction": 1
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "hazard",
           "width": 26,
           "height": 26,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1514,13 +1525,14 @@
             "patrol": 90,
             "speed": 80,
             "direction": 1
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "hazard",
           "width": 26,
           "height": 26,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 12,
           "flipX": false,
@@ -1570,13 +1582,14 @@
           "name": "runner.goal",
           "props": {
             "bonus": 150
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "goal",
           "width": 48,
           "height": 96,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 8,
           "flipX": false,
@@ -1620,8 +1633,8 @@
         "RigidBody": {
           "type": "dynamic",
           "gravityScale": 1,
-          "friction": 0.35,
-          "maxSpeed": 620,
+          "friction": 0,
+          "maxSpeed": 1600,
           "restitution": 0,
           "grounded": false
         },
@@ -1631,13 +1644,14 @@
             "speed": 260,
             "jump": 780,
             "coyote": 0.12
-          }
+          },
+          "source": ""
         },
         "Sprite": {
           "texture": "player",
           "width": 28,
           "height": 36,
-          "tint": "#ffffff",
+          "tint": "#f5f5f5",
           "alpha": 1,
           "layer": 20,
           "flipX": false,
@@ -1676,12 +1690,16 @@
           "name": "runner.hud",
           "props": {
             "line": "hud"
-          }
+          },
+          "source": ""
+        },
+        "Tag": {
+          "value": "overlay:top"
         },
         "TextLabel": {
           "text": "score 0",
           "size": 20,
-          "color": "#ffc857",
+          "color": "#ff7a2f",
           "align": "center",
           "baseline": "middle",
           "layer": 1000,
@@ -1706,10 +1724,13 @@
         "Name": {
           "value": "controls"
         },
+        "Tag": {
+          "value": "overlay:bottom"
+        },
         "TextLabel": {
           "text": "←/→ or A/D move · ↑/space jump · R restart",
           "size": 14,
-          "color": "#8b93a7",
+          "color": "#9a9a9a",
           "align": "center",
           "baseline": "middle",
           "layer": 1000,

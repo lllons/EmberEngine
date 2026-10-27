@@ -9,7 +9,19 @@
  * - the same seed and input reproduce the run exactly.
  */
 
-import { BoxCollider, snapshot, Sprite, TextLabel, Transform, vec2, Velocity } from "@ember/core";
+import {
+  BoxCollider,
+  Colors,
+  deserializeScene,
+  RigidBody,
+  Script,
+  snapshot,
+  Sprite,
+  TextLabel,
+  Transform,
+  vec2,
+  Velocity,
+} from "@ember/core";
 import { type RuntimeSession, worldDigest } from "@ember/runtime";
 import {
   buildScenes,
@@ -23,6 +35,7 @@ import {
   LEVEL_ONE,
   LEVEL_SPECS,
   levelSpec,
+  PLAYER_SCRIPT,
   PLAYER_TAG,
   runState,
   sceneNames,
@@ -515,16 +528,16 @@ Deno.test("game/ember-runner the HUD reports score, lives and time", () => {
   assert(label.text.startsWith("score "), `hud text: ${label.text}`);
   assert(label.text.includes("♥"), "lives shown");
   assert(label.text.includes("s  ·"), "time shown");
-  assertEqual(label.color, "#ffc857", "gold while playing");
+  assertEqual(label.color, Colors.gold, "accent while playing");
 });
 
-Deno.test("game/ember-runner the HUD turns red after a loss and green after a win", () => {
+Deno.test("game/ember-runner the HUD turns red after a loss and white after a win", () => {
   const lost = session();
   const lostState = stateOf(lost);
   endRun(lost);
   assertEqual(lostState.status, "dead", "dead");
   const lostHud = lost.scene.world.require(lost.scene.findByName("hud")!, TextLabel);
-  assertEqual(lostHud.color, "#e5484d", "red on death");
+  assertEqual(lostHud.color, Colors.hazard, "red on death");
 
   const won = session();
   const wonPlayer = playerOf(won);
@@ -534,7 +547,7 @@ Deno.test("game/ember-runner the HUD turns red after a loss and green after a wi
   won.step(DT);
   assertEqual(stateOf(won).status, "won", "won");
   const wonHud = won.scene.world.require(won.scene.findByName("hud")!, TextLabel);
-  assertEqual(wonHud.color, "#5ec27a", "green on win");
+  assertEqual(wonHud.color, Colors.white, "white on win");
 });
 
 // ---------------------------------------------------------------------------
@@ -594,6 +607,56 @@ Deno.test("game/ember-runner an input-only autopilot completes level 1", () => {
   assert(state.score > 200, `score includes bonuses: ${state.score}`);
   assertEqual(state.attempts, 1, "no restarts");
   assert(positionOf(runtime, player).x > 2200, "the runner reached the gate");
+});
+
+Deno.test("game/ember-runner the HUD stays pinned to the camera", () => {
+  const runtime = session();
+  runtime.run(120, DT, Array(120).fill(snapshot({ held: ["ArrowRight"] })));
+  const hud = runtime.scene.findByName("hud");
+  assert(hud !== undefined, "hud exists");
+  const transform = runtime.scene.world.require(hud, Transform);
+  near(transform.position.x, runtime.camera.state.position.x, 1e-9, "hud follows the camera x");
+  near(
+    transform.position.y,
+    runtime.camera.state.position.y - runtime.camera.viewport.height / 2 + 28,
+    1e-9,
+    "hud sits just under the top edge",
+  );
+});
+
+Deno.test("game/ember-runner the baked scene files match the level code", async () => {
+  const directory = new URL("../../games/ember-runner/scenes/", import.meta.url);
+  for (const [name, built] of buildScenes()) {
+    const text = await Deno.readTextFile(new URL(`${name}.emberscene`, directory));
+    const baked = deserializeScene(JSON.parse(text));
+    assertEqual(baked.world.entityCount, built.world.entityCount, `${name} entity count`);
+
+    // The files are the shipped source of truth, so their player must carry the same
+    // physics contract the builder writes. Drift here once made the released levels crawl
+    // at 68 px/s with a 101 px jump while every code-path test passed.
+    if (!levelSpec(name)) continue;
+    const scripted = baked.world.query(Script).filter((entity) =>
+      baked.world.require(entity, Script).name === PLAYER_SCRIPT
+    );
+    assertEqual(scripted.length, 1, `${name} has exactly one runner`);
+    const runner = scripted[0];
+    const body = baked.world.require(runner, RigidBody);
+    const script = baked.world.require(runner, Script);
+    const position = baked.world.require(runner, Transform).position;
+    assertEqual(body.friction, 0, `${name} runner friction`);
+    assert(body.maxSpeed >= (script.props.jump as number), `${name} maxSpeed clamps the jump`);
+    assertEqual(script.props.speed, 260, `${name} runner speed`);
+    assertEqual(position.x, 90, `${name} runner spawn x`);
+  }
+});
+
+Deno.test("game/ember-runner idling on the title screen does not age or score the run", () => {
+  const runtime = session(TITLE_SCENE);
+  const state = stateOf(runtime);
+  runtime.run(600, DT);
+  assertEqual(state.time, 0, "menu clock stays at zero");
+  assertEqual(state.score, 0, "menu awards nothing");
+  assertEqual(state.best, 0, "best is not polluted before the first run");
 });
 
 Deno.test("game/ember-runner a teleport-to-gate playthrough wins with a full run state", () => {

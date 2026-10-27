@@ -9,7 +9,7 @@
  * scales them into the available viewport rectangle while preserving aspect ratio.
  */
 
-import { rotateVec } from "@ember/core";
+import { Colors, rotateVec, Theme } from "@ember/core";
 import type { DrawCommand, ShapeCommand } from "@ember/render2d";
 import { commandBounds } from "@ember/render2d";
 import type { GdiCanvas } from "./gdi.ts";
@@ -60,7 +60,7 @@ export function renderCommandsGdi(
   rect: PreviewRect,
 ): PreviewMapping {
   const mapping = previewMapping(rect);
-  canvas.fillRect(rect.x, rect.y, rect.w, rect.h, "#05070c");
+  canvas.fillRect(rect.x, rect.y, rect.w, rect.h, Theme.background);
   canvas.clip(rect.x, rect.y, rect.w, rect.h);
 
   for (const command of commands) {
@@ -83,7 +83,7 @@ export function renderCommandsGdi(
     mapping.originY,
     mapping.sceneWidth * mapping.scale,
     mapping.sceneHeight * mapping.scale,
-    "#222a3b",
+    Theme.border,
   );
   return mapping;
 }
@@ -140,9 +140,9 @@ function drawShape(canvas: GdiCanvas, command: ShapeCommand, mapping: PreviewMap
         top,
         width,
         height,
-        command.tint === "#ffffff" ? "#42506b" : command.tint,
+        command.tint === Colors.white ? Theme.faint : command.tint,
       );
-      canvas.strokeRect(left, top, width, height, "#3a4762");
+      canvas.strokeRect(left, top, width, height, Theme.borderSoft);
       return;
     }
     case "text": {

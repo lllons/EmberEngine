@@ -101,7 +101,7 @@ table("color/luminance", [
   { label: "green channel weight", input: "#00ff00", value: 0.7152 },
   { label: "blue channel weight", input: "#0000ff", value: 0.0722 },
   { label: "mid grey", input: "#808080", value: 128 / 255 },
-  { label: "engine ink is dark", input: Colors.ink, value: (0.2126 * 16 + 0.7152 * 19 + 0.0722 * 26) / 255 },
+  { label: "engine ink is dark", input: Colors.ink, value: 5 / 255 },
 ] as const, (row) => near(luminance(row.input), row.value, 1e-9, row.label));
 
 Deno.test("color/luminance of unparseable input is 0", () => {

@@ -5,23 +5,30 @@
  * backends can assign them directly and scene files stay human readable.
  */
 
+import { Theme } from "./theme.ts";
+
 export type Color = string;
 
+/**
+ * Named colours used by scenes, the editor and the renderer. The values come from the
+ * theme so the palette has exactly one owner (`theme.ts`); the names describe *what* a
+ * colour is for, not which hue it happens to be.
+ */
 export const Colors = {
   transparent: "rgba(0, 0, 0, 0)",
-  black: "#000000",
-  white: "#ffffff",
-  ink: "#10131a",
-  slate: "#1b2030",
-  slateLight: "#2a3350",
-  ember: "#ff7a2f",
-  emberDeep: "#d94f12",
-  gold: "#ffc857",
-  sky: "#7fb2ff",
-  skyDeep: "#2b4a7d",
-  grass: "#5ec27a",
-  hazard: "#e5484d",
-  grey: "#8b93a7",
+  black: Theme.background,
+  white: Theme.highlight,
+  ink: Theme.background,
+  slate: Theme.panel,
+  slateLight: Theme.border,
+  ember: Theme.accent,
+  emberDeep: Theme.accentDeep,
+  gold: Theme.accent,
+  sky: Theme.highlight,
+  skyDeep: Theme.border,
+  grass: Theme.highlight,
+  hazard: Theme.danger,
+  grey: Theme.muted,
 } as const;
 
 interface Rgba {

@@ -8,7 +8,11 @@
 
 import {
   BoxCollider,
+  cloneComponentData,
+  componentByName,
+  componentNames,
   type ComponentType,
+  deserializeScene,
   type Entity,
   Name,
   Parent,
@@ -17,14 +21,11 @@ import {
   type Scene,
   Script,
   type SerializedScene,
+  serializeScene,
   TextLabel,
+  Theme,
   Transform,
   Velocity,
-  cloneComponentData,
-  componentByName,
-  componentNames,
-  deserializeScene,
-  serializeScene,
 } from "@ember/core";
 import type { Game } from "@ember/runtime";
 import type { TextureResolver } from "@ember/render2d";
@@ -184,7 +185,11 @@ export class EditorSession {
         x: Math.round(this.editCamera.position.x),
         y: Math.round(this.editCamera.position.y),
       };
-      scene.world.add(entity, Transform, { position: { ...mid }, rotation: 0, scale: { x: 1, y: 1 } });
+      scene.world.add(entity, Transform, {
+        position: { ...mid },
+        rotation: 0,
+        scale: { x: 1, y: 1 },
+      });
       scene.world.add(entity, Name, { value: template });
       created = entity;
       switch (template) {
@@ -192,26 +197,39 @@ export class EditorSession {
           scene.world.add(entity, SpriteComponent(), { texture: "player", width: 32, height: 32 });
           break;
         case "box":
-          scene.world.add(entity, RectShape, { width: 64, height: 64, color: "#7fb2ff" });
+          scene.world.add(entity, RectShape, { width: 64, height: 64, color: Theme.highlight });
           break;
         case "label":
           scene.world.add(entity, TextLabel, { text: "text", size: 20, align: "center" });
           break;
         case "player":
-          scene.world.add(entity, SpriteComponent(), { texture: "player", width: 28, height: 36, layer: 20 });
+          scene.world.add(entity, SpriteComponent(), {
+            texture: "player",
+            width: 28,
+            height: 36,
+            layer: 20,
+          });
           scene.world.add(entity, RigidBody, { type: "dynamic" });
           scene.world.add(entity, Velocity, { x: 0, y: 0 });
           scene.world.add(entity, BoxCollider, { width: 26, height: 34 });
-          scene.world.add(entity, Script, { name: "runner.player", props: { speed: 260, jump: 780 } });
+          scene.world.add(entity, Script, {
+            name: "runner.player",
+            props: { speed: 260, jump: 780 },
+          });
           scene.world.add(entity, TagComponent(), { value: "player" });
           break;
         case "ground":
-          scene.world.add(entity, RectShape, { width: 240, height: 32, color: "#1b2030" });
+          scene.world.add(entity, RectShape, { width: 240, height: 32, color: Theme.panel });
           scene.world.add(entity, RigidBody, { type: "static", gravityScale: 0 });
           scene.world.add(entity, BoxCollider, { width: 240, height: 32 });
           break;
         case "ember":
-          scene.world.add(entity, SpriteComponent(), { texture: "coin", width: 18, height: 18, frameCount: 4 });
+          scene.world.add(entity, SpriteComponent(), {
+            texture: "coin",
+            width: 18,
+            height: 18,
+            frameCount: 4,
+          });
           scene.world.add(entity, BoxCollider, { width: 18, height: 18, trigger: true });
           scene.world.add(entity, Script, { name: "runner.pickup", props: { points: 25 } });
           scene.world.add(entity, TagComponent(), { value: "coin" });
@@ -221,7 +239,10 @@ export class EditorSession {
           scene.world.add(entity, RigidBody, { type: "kinematic", gravityScale: 0 });
           scene.world.add(entity, Velocity, { x: 0, y: 0 });
           scene.world.add(entity, BoxCollider, { width: 24, height: 24, trigger: true });
-          scene.world.add(entity, Script, { name: "runner.hazard", props: { patrol: 80, speed: 80 } });
+          scene.world.add(entity, Script, {
+            name: "runner.hazard",
+            props: { patrol: 80, speed: 80 },
+          });
           scene.world.add(entity, TagComponent(), { value: "hazard" });
           break;
         case "gate":
@@ -359,7 +380,9 @@ export class EditorSession {
       autoplay: true,
       onStats: (stats) => {
         this.events.onStatus(
-          `play · ${stats.fps.toFixed(0)} fps · ${stats.entityCount} entities · ${stats.drawCommands} draws`,
+          `play · ${
+            stats.fps.toFixed(0)
+          } fps · ${stats.entityCount} entities · ${stats.drawCommands} draws`,
         );
       },
     });

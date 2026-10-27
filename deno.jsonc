@@ -26,7 +26,7 @@
     "editor": "deno run -A --unstable-ffi packages/editor/main.ts",
     "editor:native": "deno run -A --unstable-ffi packages/editor/main.ts",
     "studio": "deno run -A packages/cli/main.ts studio games/ember-runner",
-    "build:editor": "deno compile --unstable-ffi --allow-ffi --allow-read --allow-write --allow-env --output dist/EmberEngine.exe packages/editor/main.ts",
+    "build:editor": "deno compile --unstable-ffi --allow-ffi --allow-read --allow-write --allow-env --icon assets/emberengine.ico --output dist/EmberEngine.exe packages/editor/main.ts",
     "play": "deno run -A packages/cli/main.ts play games/ember-runner",
     "export": "deno run -A packages/cli/main.ts export games/ember-runner",
     "test": "deno test -A tests/",

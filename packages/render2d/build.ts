@@ -20,6 +20,7 @@ import {
   type Size,
   Sprite,
   TextLabel,
+  Theme,
   type Vec2,
   worldTransform,
 } from "@ember/core";
@@ -214,7 +215,7 @@ export function buildEntityCommands(
         y: center.y,
         w: collider.width * Math.abs(zoomX),
         h: collider.height * Math.abs(zoomY),
-        color: collider.trigger ? "#4cc9f0" : "#7cff7a",
+        color: collider.trigger ? Theme.accent : Theme.danger,
         alpha: 0.9,
         rotation: 0,
         anchorX: 0.5,

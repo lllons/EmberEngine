@@ -28,6 +28,7 @@ import {
   sceneFileName,
   Script,
   TextLabel,
+  Theme,
   Transform,
   Transform3D,
   type Vec2,
@@ -87,25 +88,27 @@ import {
 // Theme and layout
 // ---------------------------------------------------------------------------
 
+/** Editor role names over the shared palette; no paint site owns a colour value. */
 const T = {
-  background: "#0b0e15",
-  panel: "#0f1420",
-  panelDeep: "#0a0e17",
-  header: "#121a2a",
-  border: "#222a3b",
-  borderSoft: "#1a2130",
-  text: "#dfe6f3",
-  muted: "#8b93a7",
-  faint: "#5b6478",
-  accent: "#ff7a2f",
-  accentSoft: "#3a2318",
-  gold: "#ffc857",
-  sky: "#7fb2ff",
-  good: "#5ec27a",
-  bad: "#e5484d",
-  field: "#090d16",
-  rowHover: "#182033",
-  rowSelected: "#273250",
+  background: Theme.background,
+  panel: Theme.panel,
+  panelDeep: Theme.panelDeep,
+  header: Theme.header,
+  border: Theme.border,
+  borderSoft: Theme.borderSoft,
+  text: Theme.text,
+  muted: Theme.muted,
+  faint: Theme.faint,
+  accent: Theme.accent,
+  accentSoft: Theme.accentSoft,
+  gold: Theme.accent,
+  sky: Theme.highlight,
+  good: Theme.highlight,
+  bad: Theme.danger,
+  dangerLight: Theme.dangerLight,
+  field: Theme.field,
+  rowHover: Theme.rowHover,
+  rowSelected: Theme.rowSelected,
 };
 
 const TOOLBAR_HEIGHT = 46;
@@ -1798,13 +1801,13 @@ export class NativeEditor {
     canvas.text(x, y + 6, truncate(canvas, spec.label, 98, 11), 11, T.muted);
     const boxX = x + 104;
     const boxW = width - 104;
-    canvas.fillRect(boxX, y + 2, boxW, 18, active ? "#161d2c" : T.field);
+    canvas.fillRect(boxX, y + 2, boxW, 18, active ? T.header : T.field);
     canvas.strokeRect(boxX, y + 2, boxW, 18, active ? T.accent : T.borderSoft);
     const value = spec.get();
 
     if (spec.kind === "boolean") {
       const on = Boolean(value);
-      canvas.fillRect(boxX + 3, y + 5, 12, 12, on ? T.accent : "#1c2436");
+      canvas.fillRect(boxX + 3, y + 5, 12, 12, on ? T.accent : T.borderSoft);
       canvas.strokeRect(boxX + 3, y + 5, 12, 12, on ? T.accent : T.border);
       canvas.text(boxX + 20, y + 6, on ? "true" : "false", 11, T.text);
     } else if (spec.kind === "enum" || spec.kind === "mesh") {
@@ -1895,7 +1898,7 @@ export class NativeEditor {
     } else {
       const label = this.mode === "play" ? "PLAYING" : "PAUSED";
       const color = this.mode === "play" ? T.good : T.gold;
-      canvas.fillRect(rect.x + 10, rect.y + 10, 76, 20, "#0b0f18");
+      canvas.fillRect(rect.x + 10, rect.y + 10, 76, 20, T.panelDeep);
       canvas.text(rect.x + 16, rect.y + 14, label, 11, color, "left", "top", true);
       canvas.text(rect.x + 94, rect.y + 15, "Esc stop · Space jump", 11, T.muted);
     }
@@ -1930,7 +1933,7 @@ export class NativeEditor {
         const label = this.scene.labelOf(entity);
         const width = canvas.measureText(label, 10) + 10;
         canvas.fillRect(x - 2, y - 18, width, 15, color);
-        canvas.text(x + 3, y - 16, label, 10, "#0b0e15");
+        canvas.text(x + 3, y - 16, label, 10, T.background);
       }
       return;
     }
@@ -1953,7 +1956,7 @@ export class NativeEditor {
     canvas.fillRect(0, y, width, 1, T.border);
     const modeLabel = this.mode.toUpperCase();
     const modeColor = this.mode === "play" ? T.good : this.mode === "paused" ? T.gold : T.accent;
-    canvas.fillRect(8, y + 6, 52, 13, "#161d2c");
+    canvas.fillRect(8, y + 6, 52, 13, T.header);
     canvas.text(12, y + 7, modeLabel, 10, modeColor, "left", "top", true);
     const fresh = performance.now() < this.statusUntil;
     const message = fresh
@@ -1964,7 +1967,7 @@ export class NativeEditor {
       y + 7,
       truncate(canvas, message, width - 360, 11),
       11,
-      fresh && this.statusKind === "error" ? "#ffb3c0" : T.muted,
+      fresh && this.statusKind === "error" ? T.dangerLight : T.muted,
     );
     const fps = this.mode === "play" || this.mode === "paused" ? this.host?.fps.fps ?? 0 : 0;
     const right = `${this.scene.world.entityCount} entities · ${
@@ -2059,7 +2062,7 @@ export class NativeEditor {
     const editor = this.codeEditor;
     if (!editor) return;
 
-    canvas.fillRect(0, 0, width, height, "#05070c");
+    canvas.fillRect(0, 0, width, height, T.background);
     const panelW = Math.min(1120, width - 80);
     const panelH = Math.min(760, height - 80);
     const px = Math.floor((width - panelW) / 2);
@@ -2123,7 +2126,7 @@ export class NativeEditor {
     if (caretX - editor.hscroll < 0) editor.hscroll = Math.max(0, caretX - 16);
     else if (caretX - editor.hscroll > codeW - 24) editor.hscroll = caretX - codeW + 32;
 
-    canvas.fillRect(px + 1, codeY - 6, panelW - 2, codeH + 10, "#080c14");
+    canvas.fillRect(px + 1, codeY - 6, panelW - 2, codeH + 10, T.panelDeep);
     canvas.strokeRect(px + 1, codeY - 6, panelW - 2, codeH + 10, T.borderSoft);
     canvas.clip(codeX - gutter + 4, codeY - 6, codeW + gutter - 4, codeH + 10);
     if (editor.text.length === 0) {
@@ -2141,7 +2144,7 @@ export class NativeEditor {
     }
     for (let index = editor.scroll; index < Math.min(lines.length, editor.scroll + visibleLines); index++) {
       const lineY = codeY + (index - editor.scroll) * lineHeight;
-      if (index === info.line) canvas.fillRect(codeX - gutter + 4, lineY - 1, codeW + gutter - 4, lineHeight, "#111827");
+      if (index === info.line) canvas.fillRect(codeX - gutter + 4, lineY - 1, codeW + gutter - 4, lineHeight, T.rowSelected);
       canvas.text(
         codeX - 10,
         lineY + 1,
@@ -2180,7 +2183,7 @@ export class NativeEditor {
         footerY + 7,
         truncate(canvas, `error: ${editor.error}`, panelW - 32, 10),
         10,
-        "#ffb3c0",
+        T.dangerLight,
       );
     } else {
       canvas.text(
@@ -2222,20 +2225,20 @@ export class NativeEditor {
     },
   ): void {
     const hover = this.containsMouse({ x, y, w: width, h: height });
-    let background = options.active ? T.rowSelected : "#192132";
+    let background: string = options.active ? T.rowSelected : T.field;
     if (options.accent) background = T.accent;
-    if (options.danger) background = hover ? "#5a1f27" : "#38151b";
+    if (options.danger) background = hover ? Theme.dangerDeep : Theme.dangerSoft;
     else if (options.active) background = T.rowSelected;
-    else if (hover && !options.disabled) background = "#222c42";
-    if (options.disabled) background = "#111622";
+    else if (hover && !options.disabled) background = T.rowHover;
+    if (options.disabled) background = T.panelDeep;
     canvas.fillRect(x, y, width, height, background);
     canvas.strokeRect(x, y, width, height, options.accent ? T.accent : T.border);
     const color = options.disabled
       ? T.faint
       : options.accent
-      ? "#0b0e15"
+      ? T.background
       : options.danger
-      ? "#ffb3c0"
+      ? T.dangerLight
       : T.text;
     canvas.text(
       x + width / 2,

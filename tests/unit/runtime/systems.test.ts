@@ -11,7 +11,6 @@ import {
   RigidBody,
   Scene,
   Script,
-  Sprite,
   Sprite as SpriteComponent,
   Tag,
   Transform,
@@ -603,6 +602,32 @@ Deno.test("script system starts behaviours once", () => {
   session.step(DT);
   assertEquals(starts, 1);
   assertEquals(updates, 3);
+});
+
+Deno.test("script system forgets behaviours when the session switches scenes", () => {
+  let menuUpdates = 0;
+  let levelUpdates = 0;
+  const registry = new ScriptRegistry()
+    .define("menu", () => ({ update: () => menuUpdates++ }))
+    .define("level", () => ({ update: () => levelUpdates++ }));
+  const menu = new Scene({ name: "menu" });
+  const trigger = menu.createEntity();
+  menu.world.add(trigger, Script, { name: "menu" });
+  const level = new Scene({ name: "level" });
+  const other = level.createEntity();
+  // Entity ids are per world, so these two share an id: the case that leaked state.
+  assertEquals(trigger, other);
+  const scripted = level.createEntity();
+  level.world.add(scripted, Script, { name: "level" });
+
+  const session = new RuntimeSession({ scene: menu, systems: [scriptSystem({ registry })] });
+  session.step(DT);
+  session.setScene(level);
+  session.step(DT);
+  session.step(DT);
+
+  assertEquals(menuUpdates, 1);
+  assertEquals(levelUpdates, 2);
 });
 
 Deno.test("script system passes the entity and props to behaviours", () => {
