@@ -39,7 +39,6 @@ import {
 import {
   exportGame,
   type ExportResult,
-  type ExportVerification,
   placeExportedGame,
   resolveExportTarget,
   verifyExport,
