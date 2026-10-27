@@ -77,11 +77,13 @@ export function mountGame(options: MountGameOptions): MountedGame {
 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("this browser does not expose a 2D canvas context");
-  const renderer = createCanvas2DRenderer(ctx as unknown as Context2D, {
-    resolveTexture: options.resolveTexture,
-    width: canvas.width,
-    height: canvas.height,
-  });
+  const makeRenderer = () =>
+    createCanvas2DRenderer(ctx as unknown as Context2D, {
+      resolveTexture: options.resolveTexture,
+      width: canvas.width,
+      height: canvas.height,
+    });
+  let renderer = makeRenderer();
   const typedCtx = ctx as unknown as Context2D;
 
   const input = new InputTracker();
@@ -146,7 +148,27 @@ export function mountGame(options: MountGameOptions): MountedGame {
     fitCanvasToContainer(canvas, mount);
   }
 
+  /**
+   * Follows scene changes made anywhere (a `session.setScene` from a script, the host's own
+   * `loadScene`, the editor): the canvas, renderer and reported scene name track the session
+   * instead of a stale local copy.
+   */
+  function syncScene(): void {
+    const name = session.scene.name;
+    if (name === sceneName) return;
+    sceneName = name;
+    const { width, height } = session.viewport;
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+      renderer = makeRenderer();
+      fitCanvasToContainer(canvas, mount);
+    }
+    options.onScene?.(name, session);
+  }
+
   function renderFrame(): void {
+    syncScene();
     const drawList = session.drawList();
     renderer.render(drawList.commands);
     stats = {
@@ -185,11 +207,6 @@ export function mountGame(options: MountGameOptions): MountedGame {
 
   function loadScene(name: string): void {
     session.setScene(game.createScene(name));
-    sceneName = name;
-    canvas.width = session.viewport.width;
-    canvas.height = session.viewport.height;
-    fitCanvasToContainer(canvas, mount);
-    options.onScene?.(name, session);
     renderFrame();
   }
 
