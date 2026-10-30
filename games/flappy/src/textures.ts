@@ -25,17 +25,40 @@ export const birdTexture = {
   draw(ctx: Context2D, size: { width: number; height: number }): void {
     ctx.fillStyle = Colors.ember;
     ctx.beginPath();
-    ctx.ellipse(size.width / 2, size.height / 2, size.width / 2 - 1, size.height / 2 - 1, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      size.width / 2,
+      size.height / 2,
+      size.width / 2 - 1,
+      size.height / 2 - 1,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.closePath();
     ctx.fill();
 
     // Belly and wing keep the silhouette readable on black.
     ctx.fillStyle = Colors.white;
     ctx.beginPath();
-    ctx.ellipse(size.width * 0.46, size.height * 0.72, size.width * 0.3, size.height * 0.2, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      size.width * 0.46,
+      size.height * 0.72,
+      size.width * 0.3,
+      size.height * 0.2,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.closePath();
     ctx.fill();
-    fillBox(ctx, size.width * 0.2, size.height * 0.38, size.width * 0.34, size.height * 0.26, Colors.emberDeep);
+    fillBox(
+      ctx,
+      size.width * 0.2,
+      size.height * 0.38,
+      size.width * 0.34,
+      size.height * 0.26,
+      Colors.emberDeep,
+    );
 
     // Eye: white sclera, near-black pupil.
     ctx.fillStyle = Colors.white;
@@ -50,7 +73,14 @@ export const birdTexture = {
     ctx.fill();
 
     // Beak.
-    fillBox(ctx, size.width * 0.86, size.height * 0.42, size.width * 0.16, size.height * 0.14, Colors.gold);
+    fillBox(
+      ctx,
+      size.width * 0.86,
+      size.height * 0.42,
+      size.width * 0.16,
+      size.height * 0.14,
+      Colors.gold,
+    );
   },
 };
 

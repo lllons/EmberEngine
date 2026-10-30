@@ -8,14 +8,9 @@
  */
 
 import { RigidBody, Tag, TextLabel, Theme, Transform, Velocity } from "@ember/core";
-import { type System, SystemOrder, defineSystem } from "@ember/runtime";
+import { defineSystem, type System, SystemOrder } from "@ember/runtime";
 import { createPipePair } from "./entities.ts";
-import {
-  BIRD_TAG,
-  GROUND_TAG,
-  PIPE_TAG,
-  SCORE_TAG,
-} from "./entities.ts";
+import { BIRD_TAG, GROUND_TAG, PIPE_TAG, SCORE_TAG } from "./entities.ts";
 import {
   FIRST_PIPE_DELAY,
   GAP_MAX,
@@ -26,7 +21,7 @@ import {
   PIPE_SPEED,
   VIEWPORT,
 } from "./names.ts";
-import { awardPoint, endRun, RESTART, RUN_STATE, type FlappyState } from "./state.ts";
+import { awardPoint, endRun, type FlappyState, RESTART, RUN_STATE } from "./state.ts";
 
 const RESTART_GUARD = 0.45;
 
@@ -245,7 +240,12 @@ export function hudSystem(): System {
     text("score", String(state.score), playing ? Theme.highlight : Theme.accent);
     text("best", `BEST ${state.best}`, Theme.muted);
     text("overlay", "GAME OVER", Theme.accent, playing ? 0 : 1);
-    text("overlay-detail", `score ${state.score}  ·  best ${state.best}`, Theme.text, playing ? 0 : 1);
+    text(
+      "overlay-detail",
+      `score ${state.score}  ·  best ${state.best}`,
+      Theme.text,
+      playing ? 0 : 1,
+    );
     text(
       "overlay-prompt",
       `${state.message}  ·  SPACE / CLICK to retry`,

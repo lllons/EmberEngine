@@ -4,6 +4,10 @@
  * A fresh editor is intentionally empty: one scene, no entities, and a small library of
  * editor scripts. Examples are complete `Game` instances opened from the Examples menu;
  * they never leak into the empty project unless the user saves a scene.
+ *
+ * The menu offers the scripting playground, the 3D showcase and the two shipped games
+ * (Ember Runner and Flappy Ember), each of which opens as an editable project whose scenes
+ * are written under `examples/<id>/scenes`.
  */
 
 import {
@@ -21,8 +25,55 @@ import {
   vec2,
   vec3,
 } from "@ember/core";
+import type { TextureSources } from "@ember/assets";
 import { Game, numberProp, ScriptRegistry, type ScriptBehaviour } from "@ember/runtime";
-import { createGame as createRunnerGame } from "../../games/ember-runner/src/main.ts";
+import {
+  createGame as createRunnerGame,
+  textureSources as runnerTextures,
+} from "../../games/ember-runner/src/main.ts";
+import {
+  createGame as createFlappyGame,
+  textureSources as flappyTextures,
+} from "../../games/flappy/src/main.ts";
+
+/** Absolute URL of this module, so generated exporters can import the factories by URL. */
+export const EXAMPLES_MODULE_URL = import.meta.url;
+
+/** The runner game's own module, used when the runner example is exported. */
+export const RUNNER_MODULE_URL = new URL("../../games/ember-runner/src/main.ts", import.meta.url)
+  .href;
+
+/** The Flappy game's own module, used when the Flappy example is exported. */
+export const FLAPPY_MODULE_URL = new URL("../../games/flappy/src/main.ts", import.meta.url).href;
+
+/**
+ * Scenes to build a game from. The editor passes the scenes it has loaded; when they are
+ * omitted (tests, `EmberEngine.exe` opening an example directly) the example's own scene
+ * code is used.
+ */
+export interface EditorGameOptions {
+  scenes?: Map<string, Scene>;
+  start?: string;
+}
+
+/** Where an exported project re-exports its game factory from. */
+export interface EditorFactorySource {
+  /** Module holding the factory (a `file:` URL). */
+  moduleUrl: string;
+  /** Name the factory is exported under in that module. */
+  exportName: string;
+  /**
+   * Name of the module's procedural texture export (`textureSources`), when it has one.
+   * A game with textures exported through the editor's generated module needs them: without
+   * the re-export the packager finds no textures and every sprite falls back to a placeholder.
+   */
+  textureExportName?: string;
+}
+
+/** The factory source for a project that only exists inside the editor. */
+export function editorFactorySource(exportName: string): EditorFactorySource {
+  return { moduleUrl: EXAMPLES_MODULE_URL, exportName };
+}
 
 export interface EditorExample {
   id: string;
@@ -30,7 +81,32 @@ export interface EditorExample {
   description: string;
   /** Scene the example opens in. */
   startScene: string;
-  createGame(): Game;
+  createGame(options?: EditorGameOptions): Game;
+  /** Module an exported copy of this example re-exports its game factory from. */
+  factory: EditorFactorySource;
+  /**
+   * Procedural textures the example's sprites are drawn with. The editor rasterises them
+   * (`@ember/assets` + the software canvas factory), so the viewport shows the game's real
+   * artwork instead of placeholder boxes. Examples without textures draw plain shapes.
+   */
+  textures?: TextureSources;
+}
+
+/**
+ * Scene sources for a game built from the editor's loaded scenes, or from the example's own
+ * scene code when none were handed in. Every scene is wrapped in a factory so two sessions
+ * of the same game never share one instance.
+ */
+function sceneSources(
+  scenes: Map<string, Scene> | undefined,
+  fallback: Record<string, Scene>,
+): Record<string, () => Scene> {
+  const entries: Array<[string, Scene]> = scenes && scenes.size > 0
+    ? [...scenes]
+    : Object.entries(fallback);
+  const sources: Record<string, () => Scene> = {};
+  for (const [name, scene] of entries) sources[name] = () => scene.clone();
+  return sources;
 }
 
 const VIEWPORT = { width: 960, height: 540 };
@@ -122,24 +198,25 @@ export function createEditorScripts(): ScriptRegistry {
   return registry;
 }
 
-function blankGame(title: string, scene: Scene): Game {
+function blankGame(title: string, scene: Scene, options: EditorGameOptions = {}): Game {
+  const scenes = sceneSources(options.scenes, { [scene.name]: scene });
   return new Game({
     id: "untitled",
     title,
     version: "0.1.0",
-    scenes: { [scene.name]: () => scene.clone() },
-    start: scene.name,
+    scenes,
+    start: options.start && scenes[options.start] ? options.start : Object.keys(scenes)[0],
     scripts: createEditorScripts(),
     seed: title,
   });
 }
 
-export function createEmptyGame(): Game {
-  return blankGame("Untitled Project", createEmptyScene());
+export function createEmptyGame(options: EditorGameOptions = {}): Game {
+  return blankGame("Untitled Project", createEmptyScene(), options);
 }
 
 /** A 2D + 3D scene showing inline scripts, registered scripts and mesh rendering. */
-export function createScriptingGame(): Game {
+export function createScriptingGame(options: EditorGameOptions = {}): Game {
   const scene = new Scene({
     name: "scripting-playground",
     background: Theme.background,
@@ -229,15 +306,15 @@ export function createScriptingGame(): Game {
   return new Game({
     id: "scripting-playground",
     title: "Scripting Playground",
-    scenes: { [scene.name]: () => scene.clone() },
-    start: scene.name,
+    scenes: sceneSources(options.scenes, { [scene.name]: scene }),
+    start: options.start ?? scene.name,
     scripts: createEditorScripts(),
     seed: "scripting-playground",
   });
 }
 
 /** A scene with several meshes and a movable 3D camera. */
-export function create3DGame(): Game {
+export function create3DGame(options: EditorGameOptions = {}): Game {
   const scene = new Scene({
     name: "3d-showcase",
     background: Theme.background,
@@ -287,16 +364,21 @@ export function create3DGame(): Game {
   return new Game({
     id: "3d-showcase",
     title: "3D Showcase",
-    scenes: { [scene.name]: () => scene.clone() },
-    start: scene.name,
+    scenes: sceneSources(options.scenes, { [scene.name]: scene }),
+    start: options.start ?? scene.name,
     scripts: createEditorScripts(),
     seed: "3d-showcase",
   });
 }
 
 /** The shipped platformer, opened as a full example project. */
-export function createRunnerExampleGame(): Game {
-  return createRunnerGame({ start: "title" });
+export function createRunnerExampleGame(options: EditorGameOptions = {}): Game {
+  return createRunnerGame({ scenes: options.scenes, start: options.start ?? "title" });
+}
+
+/** The shipped one-button arcade game, opened as a full example project. */
+export function createFlappyExampleGame(options: EditorGameOptions = {}): Game {
+  return createFlappyGame({ scenes: options.scenes, start: options.start ?? "title" });
 }
 
 export const EDITOR_EXAMPLES: readonly EditorExample[] = [
@@ -306,6 +388,7 @@ export const EDITOR_EXAMPLES: readonly EditorExample[] = [
     description: "2D shapes + a 3D cube, inline JavaScript and registered behaviours",
     startScene: "scripting-playground",
     createGame: createScriptingGame,
+    factory: editorFactorySource("createScriptingGame"),
   },
   {
     id: "3d-showcase",
@@ -313,6 +396,7 @@ export const EDITOR_EXAMPLES: readonly EditorExample[] = [
     description: "Five meshes, painter-sorted triangles and a 3D camera",
     startScene: "3d-showcase",
     createGame: create3DGame,
+    factory: editorFactorySource("create3DGame"),
   },
   {
     id: "ember-runner",
@@ -320,8 +404,32 @@ export const EDITOR_EXAMPLES: readonly EditorExample[] = [
     description: "The complete 2D platformer: scenes, scripts, systems and services",
     startScene: "title",
     createGame: createRunnerExampleGame,
+    textures: runnerTextures,
+    // The runner keeps its own module: exporting it must ship the real game, not a shim.
+    factory: {
+      moduleUrl: RUNNER_MODULE_URL,
+      exportName: "createGame",
+      textureExportName: "textureSources",
+    },
+  },
+  {
+    id: "flappy-ember",
+    title: "Flappy Ember",
+    description: "One-button arcade: texture sprites, a score trigger and a pipe spawner",
+    startScene: "title",
+    createGame: createFlappyExampleGame,
+    textures: flappyTextures,
+    // Like the runner, Flappy ships its own module, and its sprites need its textures.
+    factory: {
+      moduleUrl: FLAPPY_MODULE_URL,
+      exportName: "createGame",
+      textureExportName: "textureSources",
+    },
   },
 ];
+
+/** The factory source of the empty project the editor opens on a fresh launch. */
+export const EMPTY_PROJECT_FACTORY: EditorFactorySource = editorFactorySource("createEmptyGame");
 
 // ---------------------------------------------------------------------------
 // Example assets helpers (used by the editor menu and tests)

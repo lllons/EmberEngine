@@ -174,9 +174,14 @@ install, no Node, no network.
 The editor is the Win32/GDI application in `packages/editor`. A fresh launch creates an
 `Untitled Project` with one blank scene and the editor's small script library; it does not open the
 sample game automatically. `packages/editor/examples.ts` owns the built-in examples (Scripting
-Playground, 3D Showcase, Ember Runner). The Examples menu swaps the whole project in memory, while
-each example's scenes are written under `examples/<id>/scenes` so they never populate the empty
-project unless edited and saved.
+Playground, 3D Showcase, Ember Runner and Flappy Ember). The Examples menu swaps the whole project
+in memory, while each example's scenes are written under `examples/<id>/scenes` so they never
+populate the empty project unless edited and saved.
+
+The two game examples keep their own modules (`games/<game>/src/main.ts`) as their export factory,
+so exporting one ships the real game. An example that draws sprites also names that module's
+`textureSources` in its factory: the generated export module re-exports them, because the packager
+detects textures by that export and drops every sprite to a placeholder without it.
 
 `packages/studio` is a legacy browser shell retained for its JSON API tests. It is not the editor,
 is not compiled into `EmberEngine.exe`, and `deno task editor` never starts a browser or HTTP

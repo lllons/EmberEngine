@@ -7,11 +7,15 @@
  *
  * Geometry is letterboxed: commands use the scene viewport's pixel space, and the editor
  * scales them into the available viewport rectangle while preserving aspect ratio.
+ *
+ * Sprites draw their real texture when the caller supplies one (the editor builds the
+ * project's procedural textures), including uv frames, tint, alpha, flip and rotation. A
+ * key with no texture behind it falls back to the tinted box used before.
  */
 
 import { Colors, rotateVec, Theme } from "@ember/core";
-import type { DrawCommand, ShapeCommand } from "@ember/render2d";
-import { commandBounds } from "@ember/render2d";
+import type { DrawCommand, RgbaImage, ShapeCommand } from "@ember/render2d";
+import { commandBounds, sampleSprite } from "@ember/render2d";
 import type { GdiCanvas } from "./gdi.ts";
 
 export interface PreviewRect {
@@ -31,6 +35,14 @@ export interface PreviewMapping {
   scale: number;
   sceneWidth: number;
   sceneHeight: number;
+}
+
+export interface GdiRenderOptions {
+  /**
+   * Procedural textures by `Sprite.texture` key, as built by `@ember/assets` with the
+   * software canvas factory. Keys with no texture draw the tinted placeholder box.
+   */
+  textures?: (key: string) => RgbaImage | undefined;
 }
 
 /** Where the scene sits inside the panel; shared by rendering, picking and dragging. */
@@ -58,6 +70,7 @@ export function renderCommandsGdi(
   canvas: GdiCanvas,
   commands: readonly DrawCommand[],
   rect: PreviewRect,
+  options: GdiRenderOptions = {},
 ): PreviewMapping {
   const mapping = previewMapping(rect);
   canvas.fillRect(rect.x, rect.y, rect.w, rect.h, Theme.background);
@@ -74,7 +87,7 @@ export function renderCommandsGdi(
       );
       continue;
     }
-    drawShape(canvas, command, mapping);
+    drawShape(canvas, command, mapping, options);
   }
 
   canvas.restore();
@@ -88,7 +101,12 @@ export function renderCommandsGdi(
   return mapping;
 }
 
-function drawShape(canvas: GdiCanvas, command: ShapeCommand, mapping: PreviewMapping): void {
+function drawShape(
+  canvas: GdiCanvas,
+  command: ShapeCommand,
+  mapping: PreviewMapping,
+  options: GdiRenderOptions,
+): void {
   if (command.alpha <= 0.02) return;
   const scale = mapping.scale;
   switch (command.kind) {
@@ -134,7 +152,29 @@ function drawShape(canvas: GdiCanvas, command: ShapeCommand, mapping: PreviewMap
       const height = command.height * scale;
       const left = x(mapping, command.x) - width * command.anchorX;
       const top = y(mapping, command.y) - height * command.anchorY;
-      // Textures are not decoded by the native preview; the tint keeps layout readable.
+      const texture = options.textures?.(command.texture);
+      if (texture && width >= 1 && height >= 1) {
+        // Sample first, then blit: uv frames, tint, alpha, flip and rotation are all pixels
+        // the GDI surface can take in one go.
+        const sampled = sampleSprite(texture, {
+          uv: command.uv,
+          width,
+          height,
+          tint: command.tint,
+          alpha: command.alpha,
+          flipX: command.flipX,
+          rotation: command.rotation,
+          anchorX: command.anchorX,
+          anchorY: command.anchorY,
+        });
+        canvas.alphaBlit(
+          sampled.image,
+          x(mapping, command.x) + sampled.offsetX,
+          y(mapping, command.y) + sampled.offsetY,
+        );
+        return;
+      }
+      // No texture for this key; the tint keeps layout readable.
       canvas.fillRect(
         left,
         top,

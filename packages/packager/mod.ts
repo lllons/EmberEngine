@@ -233,8 +233,23 @@ export const APP_SOURCE = ${JSON.stringify(appSource)} as string;
 `;
 }
 
+/**
+ * The pipeline shells out to `deno bundle` and `deno compile`, so the host process needs run
+ * access. A compiled editor built without `--allow-run` would otherwise fail halfway through
+ * with Deno's own `Requires run access to "deno"`; fail up front with the fix instead.
+ */
+export async function assertCanRunTools(): Promise<void> {
+  const status = await Deno.permissions.query({ name: "run" });
+  if (status.state === "denied") {
+    throw new Error(
+      "export runs `deno bundle` and `deno compile`, but this editor was built without run access — rebuild it with `deno task build:editor`, or run the editor with `deno task editor`",
+    );
+  }
+}
+
 /** Runs the whole export pipeline and returns what was produced. */
 export async function exportGame(request: ExportRequest): Promise<ExportResult> {
+  await assertCanRunTools();
   const steps: ExportStep[] = [];
   const warnings: string[] = [];
   const workspaceRoot = request.workspaceRoot;

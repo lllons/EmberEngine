@@ -83,7 +83,10 @@ function numberArg(args: Record<string, unknown>, key: string, fallback?: number
   return parsed;
 }
 
-function recordArg(args: Record<string, unknown>, key: string): Record<string, unknown> | undefined {
+function recordArg(
+  args: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> | undefined {
   const value = args[key];
   if (value === undefined || value === null) return undefined;
   if (typeof value !== "object" || Array.isArray(value)) {
@@ -109,7 +112,9 @@ async function descriptorFor(args: Record<string, unknown>): Promise<GameDescrip
     return await loadGameDescriptor(gameArgument(args));
   } catch (error) {
     throw new Error(
-      `${(error as Error).message}\nHint: start the agent in the engine workspace (the folder with game.json), or pass "game".`,
+      `${
+        (error as Error).message
+      }\nHint: start the agent in the engine workspace (the folder with game.json), or pass "game".`,
     );
   }
 }
@@ -323,7 +328,13 @@ export function createEngineTools(): Tool[] {
         );
         return { data: { ...parsed, entities, entityCount: scene.entityCount } };
       }
-      return { data: { ...parsed, entityCount: scene.entityCount, path: `${descriptor.scenesDirectory}/${scene.name}.emberscene` } };
+      return {
+        data: {
+          ...parsed,
+          entityCount: scene.entityCount,
+          path: `${descriptor.scenesDirectory}/${scene.name}.emberscene`,
+        },
+      };
     },
   });
 
@@ -352,9 +363,15 @@ export function createEngineTools(): Tool[] {
               type: "object",
               properties: {
                 name: { type: "string" },
-                position: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } },
+                position: {
+                  type: "object",
+                  properties: { x: { type: "number" }, y: { type: "number" } },
+                },
                 rotation: { type: "number" },
-                scale: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } },
+                scale: {
+                  type: "object",
+                  properties: { x: { type: "number" }, y: { type: "number" } },
+                },
                 components: { type: "object" },
               },
               additionalProperties: false,
@@ -414,13 +431,16 @@ export function createEngineTools(): Tool[] {
       name: "entity_add",
       title: "Add an entity",
       description:
-        "Add an entity to a scene file and save it. Components are merged over their defaults, e.g. components: { RectShape: { width: 64, height: 64, color: \"#ff7a2f\" } }.",
+        'Add an entity to a scene file and save it. Components are merged over their defaults, e.g. components: { RectShape: { width: 64, height: 64, color: "#ff7a2f" } }.',
       inputSchema: {
         type: "object",
         properties: {
           scene: stringSchema("Scene name to edit."),
           name: stringSchema("Display name for the new entity."),
-          position: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } },
+          position: {
+            type: "object",
+            properties: { x: { type: "number" }, y: { type: "number" } },
+          },
           rotation: { type: "number" },
           scale: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } },
           components: {
@@ -455,7 +475,7 @@ export function createEngineTools(): Tool[] {
       name: "entity_update",
       title: "Update an entity",
       description:
-        "Rename an entity and/or merge component fields into it. Examples: { entity: \"Player\", name: \"Runner\" }, { entity: 3, components: { Transform: { position: { x: 120, y: 380 } } } }.",
+        'Rename an entity and/or merge component fields into it. Examples: { entity: "Player", name: "Runner" }, { entity: 3, components: { Transform: { position: { x: 120, y: 380 } } } }.',
       inputSchema: {
         type: "object",
         properties: {
@@ -490,7 +510,9 @@ export function createEngineTools(): Tool[] {
       }
       const components = applyComponents(scene, entity, recordArg(args, "components"));
       const path = await writeScene(descriptor, sceneName, scene);
-      return { data: { scene: sceneName, path, entity: entitySummary(scene, entity), updated: components } };
+      return {
+        data: { scene: sceneName, path, entity: entitySummary(scene, entity), updated: components },
+      };
     },
   });
 
@@ -523,7 +545,14 @@ export function createEngineTools(): Tool[] {
       const label = scene.labelOf(entity);
       scene.world.despawn(entity);
       const path = await writeScene(descriptor, sceneName, scene);
-      return { data: { scene: sceneName, path, deleted: { id: entity, name: label }, entities: scene.entityCount } };
+      return {
+        data: {
+          scene: sceneName,
+          path,
+          deleted: { id: entity, name: label },
+          entities: scene.entityCount,
+        },
+      };
     },
   });
 

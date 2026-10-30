@@ -14,7 +14,8 @@ single toolchain: runtime, test runner, bundler and `.exe` compiler.
 - **Native editor** — a real Win32/GDI window with hierarchy, viewport, inspector, entity creation,
   3D mesh editing, Play mode, and `.emberscene` save/load. No browser, webview or local server.
 - **Starts empty** — a fresh launch is one blank scene. Open the **Examples** menu for a scripting
-  playground, a 3D showcase, or the complete Ember Runner platformer.
+  playground, a 3D showcase, or one of the two shipped games (Ember Runner and Flappy Ember); each
+  opens as a full editable project and exports from the editor.
 - **Inline scripting** — attach a registered behaviour or write JavaScript directly on an entity.
   The inspector has a code editor; scripts are stored in the scene, restart when applied, and report
   compile/runtime errors without stopping Play.
@@ -97,9 +98,9 @@ default browser. The editor itself is native.
 ### Drive the engine from a coding agent (MCP)
 
 `packages/mcp` is a dependency-free Model Context Protocol server on stdio, so an MCP-capable agent
-(Claude Code, Cursor, …) can build the game from chat. It drives the same loader, runtime and packager
-as the CLI, so every edit lands as a real `.emberscene` on disk. `.mcp.json` is committed, so Claude
-Code picks the server up with no setup:
+(Claude Code, Cursor, …) can build the game from chat. It drives the same loader, runtime and
+packager as the CLI, so every edit lands as a real `.emberscene` on disk. `.mcp.json` is committed,
+so Claude Code picks the server up with no setup:
 
 ```json
 {

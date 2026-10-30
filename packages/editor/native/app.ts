@@ -35,17 +35,25 @@ import {
   worldTransform,
   writeSceneFile,
 } from "@ember/core";
+import { buildTextures, createSoftwareCanvasFactory, type TextureSources } from "@ember/assets";
 import {
   type DrawCommand,
   type DrawList,
   pickEntityAtPoint,
+  type RgbaImage,
   screenToWorld,
   zoomAtScreenPoint,
 } from "@ember/render2d";
 import { buildFrame } from "@ember/render3d";
 import { meshNames } from "@ember/render3d";
 import { compileInlineScript, type Game, RuntimeHost } from "@ember/runtime";
-import { createEmptyGame, type EditorExample } from "../examples.ts";
+import {
+  createEmptyGame,
+  type EditorExample,
+  EMPTY_PROJECT_FACTORY,
+  type EditorFactorySource,
+} from "../examples.ts";
+import { describeEditorExport, exportEditorProject, scenesForExport } from "./export.ts";
 import {
   clientToScene,
   entitySceneBounds,
@@ -333,6 +341,12 @@ export interface NativeEditorOptions {
   title?: string;
   savedScenes?: Iterable<string>;
   startScene?: string;
+  /** Repository root the exports are built from (defaults to the working directory). */
+  workspaceRoot?: string;
+  /** Module exporting `createGame` for a project opened from a game folder. */
+  gameModulePath?: string;
+  /** Editor factory an in-editor project is exported through (empty project, examples). */
+  factory?: EditorFactorySource;
 }
 
 function readPath(target: Record<string, unknown>, path: string): unknown {
@@ -361,6 +375,23 @@ function inferKind(path: string, value: unknown): FieldKind {
   if (typeof value === "number") return "number";
   if (typeof value === "boolean") return "boolean";
   return "text";
+}
+
+/**
+ * Rasterises a project's procedural textures once. The viewport resolves sprite keys from
+ * the result, so a frame of Play mode costs a lookup instead of a re-render. Projects with
+ * no texture sources (the empty project, a folder opened with `--game`) get an empty map and
+ * keep the tinted placeholder boxes.
+ */
+function textureImages(sources: TextureSources | undefined): Map<string, RgbaImage> {
+  const images = new Map<string, RgbaImage>();
+  if (!sources || Object.keys(sources).length === 0) return images;
+  const registry = buildTextures(sources, createSoftwareCanvasFactory());
+  for (const key of Object.keys(sources).sort()) {
+    const image = registry.image(key)?.image;
+    if (image) images.set(key, image as RgbaImage);
+  }
+  return images;
 }
 
 function displayValue(value: unknown): string {
@@ -421,7 +452,14 @@ export class NativeEditor {
   private componentMenuOpen = false;
   private examplesMenuOpen = false;
   private examplesButtonRect: Rect | null = null;
+  private workspaceRoot: string;
+  private gameModulePath: string | null;
+  private factory: EditorFactorySource;
+  /** Set while an export runs, so the status bar can report its step. */
+  private exporting: string | null = null;
   private previewRect: PreviewRect | null = null;
+  /** The open project's procedural textures, rasterised once when it is opened. */
+  private textures = new Map<string, RgbaImage>();
   private commands: DrawCommand[] = [];
   private drag: DragState | null = null;
   private pan: PanState | null = null;
@@ -435,6 +473,9 @@ export class NativeEditor {
     this.examples = options.examples ?? [];
     this.projectTitle = options.title ?? this.game.title;
     this.savedScenes = new Set(options.savedScenes ?? []);
+    this.workspaceRoot = options.workspaceRoot ?? Deno.cwd();
+    this.gameModulePath = options.gameModulePath ?? null;
+    this.factory = options.factory ?? EMPTY_PROJECT_FACTORY;
     const names = this.game.sceneNames();
     if (names.length === 0) {
       const scene = new Scene({ name: "scene", background: Colors.ink });
@@ -1183,6 +1224,45 @@ export class NativeEditor {
     return join(this.sceneDirectory, sceneFileName(this.scene.name));
   }
 
+  /**
+   * Exports the open project to a standalone executable with `@ember/packager`.
+   *
+   * The current scene is saved first so the file matches what the window shows, then the
+   * packager bundles every scene, compiles the executable and the status bar reports each
+   * step while the window keeps painting.
+   */
+  private async exportProject(): Promise<void> {
+    if (this.exporting) return;
+    if (this.mode !== "edit") this.stopPlay();
+    if (this.dirty && !(await this.saveScene())) return;
+
+    this.exporting = "starting…";
+    this.needsPaint = true;
+    try {
+      const outcome = await exportEditorProject({
+        game: this.game,
+        scenes: scenesForExport(this.game, this.scene),
+        startScene: this.sceneName,
+        sceneDirectory: this.sceneDirectory,
+        workspaceRoot: this.workspaceRoot,
+        gameModulePath: this.gameModulePath,
+        factory: this.factory,
+        onStep: (step) => {
+          this.exporting = `${step.name}: ${step.detail}`;
+          this.needsPaint = true;
+        },
+      });
+      this.exporting = null;
+      this.toast(describeEditorExport(outcome));
+      for (const warning of outcome.result.warnings) this.toast(warning, "error");
+    } catch (error) {
+      this.exporting = null;
+      const message = (error as Error).message.split("\n")[0];
+      this.toast(`Export failed: ${message}`, "error");
+      console.error(error);
+    }
+  }
+
   private async switchScene(name: string): Promise<void> {
     if (name === this.sceneName) return;
     if (this.dirty && !(await this.saveScene())) return;
@@ -1207,6 +1287,8 @@ export class NativeEditor {
     directory: string,
     startScene: string,
     loadFromDisk: boolean,
+    factory: EditorFactorySource,
+    textures?: TextureSources,
   ): Promise<void> {
     if (this.dirty && !this.window?.confirm("Discard unsaved changes and switch project?")) {
       return;
@@ -1220,6 +1302,10 @@ export class NativeEditor {
     this.projectTitle = title;
     this.sceneDirectory = directory;
     this.savedScenes = new Set(loaded);
+    // A built-in project has no game module on disk; it exports through the editor factory.
+    this.gameModulePath = null;
+    this.factory = factory;
+    this.textures = textureImages(textures);
     const start = game.hasScene(startScene) ? startScene : game.startScene;
     this.sceneName = start;
     this.scene = game.createScene(start);
@@ -1245,6 +1331,8 @@ export class NativeEditor {
       join(this.examplesRoot, example.id, "scenes"),
       example.startScene,
       true,
+      example.factory,
+      example.textures,
     );
   }
 
@@ -1255,6 +1343,7 @@ export class NativeEditor {
       this.defaultSceneDirectory,
       "untitled",
       false,
+      EMPTY_PROJECT_FACTORY,
     );
   }
 
@@ -1421,6 +1510,15 @@ export class NativeEditor {
       () => void this.saveScene(),
       false,
       this.dirty,
+    );
+    right = this.toolbarButton(
+      canvas,
+      this.exporting ? "Exporting…" : "Export .exe",
+      right,
+      92,
+      () => void this.exportProject(),
+      this.exporting !== null,
+      this.exporting !== null,
     );
 
     const examplesWidth = 96;
@@ -1861,14 +1959,19 @@ export class NativeEditor {
       this.commands = frame.commands;
     }
 
-    renderCommandsGdi(canvas, this.commands, {
-      x: rect.x,
-      y: rect.y,
-      w: rect.w,
-      h: rect.h,
-      sceneWidth,
-      sceneHeight,
-    });
+    renderCommandsGdi(
+      canvas,
+      this.commands,
+      {
+        x: rect.x,
+        y: rect.y,
+        w: rect.w,
+        h: rect.h,
+        sceneWidth,
+        sceneHeight,
+      },
+      { textures: (key) => this.textures.get(key) },
+    );
 
     if (this.mode === "edit") {
       if (this.scene.world.entityCount === 0) {
@@ -1959,15 +2062,21 @@ export class NativeEditor {
     canvas.fillRect(8, y + 6, 52, 13, T.header);
     canvas.text(12, y + 7, modeLabel, 10, modeColor, "left", "top", true);
     const fresh = performance.now() < this.statusUntil;
-    const message = fresh
+    const message = this.exporting !== null
+      ? `exporting ${this.projectTitle}: ${this.exporting}`
+      : fresh
       ? this.status
-      : "Click an entity to select · drag to move · Save writes .emberscene";
+      : "Click an entity to select · drag to move · Save writes .emberscene · Export builds an .exe";
     canvas.text(
       70,
       y + 7,
       truncate(canvas, message, width - 360, 11),
       11,
-      fresh && this.statusKind === "error" ? T.dangerLight : T.muted,
+      this.exporting !== null
+        ? T.gold
+        : fresh && this.statusKind === "error"
+        ? T.dangerLight
+        : T.muted,
     );
     const fps = this.mode === "play" || this.mode === "paused" ? this.host?.fps.fps ?? 0 : 0;
     const right = `${this.scene.world.entityCount} entities · ${

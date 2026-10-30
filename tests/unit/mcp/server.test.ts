@@ -3,12 +3,7 @@
  */
 
 import { assert, assertEquals, assertFalse } from "@std/assert";
-import {
-  LineTransport,
-  McpServer,
-  parseRequest,
-  RpcProtocolError,
-} from "@ember/mcp";
+import { LineTransport, McpServer, parseRequest, type RpcProtocolError } from "@ember/mcp";
 
 function memoryTransport(lines: readonly string[]): {
   transport: LineTransport;
@@ -95,7 +90,9 @@ Deno.test("mcp script_check accepts a hook object and reports syntax errors", as
     '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"script_check","arguments":{"source":"({ update(ctx) { return ctx.dt; } })"}}}',
     '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"script_check","arguments":{"source":"({ update( })"}}}',
   ]);
-  const ok = JSON.parse((responses[0].result as { content: Array<{ text: string }> }).content[0].text);
+  const ok = JSON.parse(
+    (responses[0].result as { content: Array<{ text: string }> }).content[0].text,
+  );
   assertEquals(ok.ok, true);
   assert(ok.hooks.includes("update"));
 

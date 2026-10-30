@@ -19,7 +19,10 @@ function addSkyline(scene: Scene): void {
     { x: 370, w: 80, h: 190, color: Theme.panel },
   ];
   for (const band of bands) {
-    const entity = scene.createEntity({ name: "skyline", position: vec2(band.x, GROUND_TOP - band.h / 2) });
+    const entity = scene.createEntity({
+      name: "skyline",
+      position: vec2(band.x, GROUND_TOP - band.h / 2),
+    });
     scene.world.add(entity, RectShape, {
       width: band.w,
       height: band.h,
@@ -47,8 +50,14 @@ export function buildTitleScene(): Scene {
     metadata: { title: "Flappy Ember — title" },
   });
 
-  createText(scene, "title", VIEWPORT.width / 2, 220, "FLAPPY", { size: 68, color: Theme.highlight });
-  createText(scene, "title-accent", VIEWPORT.width / 2, 285, "EMBER", { size: 44, color: Theme.accent });
+  createText(scene, "title", VIEWPORT.width / 2, 220, "FLAPPY", {
+    size: 68,
+    color: Theme.highlight,
+  });
+  createText(scene, "title-accent", VIEWPORT.width / 2, 285, "EMBER", {
+    size: 44,
+    color: Theme.accent,
+  });
   createText(scene, "subtitle", VIEWPORT.width / 2, 345, "one button · endless pipes", {
     size: 15,
     color: Theme.muted,

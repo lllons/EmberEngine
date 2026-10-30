@@ -431,11 +431,17 @@ export async function commandEditor(options: CliOptions, log = console.log): Pro
   log(`scenes:  ${loaded.game.sceneNames().join(", ")} (from ${loaded.sceneSource})`);
   log("opening the EmberEngine window; close it to return to the terminal");
   const { runNativeEditor } = await import("../editor/native/app.ts");
+  const { EDITOR_EXAMPLES, EMPTY_PROJECT_FACTORY } = await import("../editor/examples.ts");
   await runNativeEditor({
     game: loaded.game,
     sceneDirectory: loaded.descriptor.scenesDirectory,
+    examplesRoot: `${loaded.descriptor.directory}/examples`,
+    examples: EDITOR_EXAMPLES,
     title: loaded.descriptor.title,
     savedScenes: files.map((file) => file.name),
+    workspaceRoot: absolutePath("."),
+    gameModulePath: loaded.descriptor.entryPath,
+    factory: EMPTY_PROJECT_FACTORY,
   });
   return 0;
 }

@@ -7,4 +7,15 @@
  */
 
 export { NativeEditor, runNativeEditor, type NativeEditorOptions } from "./native/app.ts";
+export {
+  type EditorExportOutcome,
+  type EditorExportRequest,
+  describeEditorExport,
+  editorGameModuleSource,
+  exportEditorProject,
+  findWorkspaceRoot,
+  modulePath,
+  resolveFactoryModule,
+  scenesForExport,
+} from "./native/export.ts";
 export * from "./examples.ts";

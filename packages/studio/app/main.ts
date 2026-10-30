@@ -33,6 +33,20 @@ import { button, clear, el, panel, select } from "./dom.ts";
 import { renderInspector } from "./inspector.ts";
 import { EditorSession } from "./session.ts";
 
+/** Entity templates the hierarchy can add; mirrors `EditorSession.createEntity`'s switch. */
+const ADD_ENTITY_TEMPLATES = [
+  "add entity…",
+  "player",
+  "ground",
+  "ember",
+  "hazard",
+  "gate",
+  "sprite",
+  "box",
+  "label",
+  "empty",
+] as const;
+
 export interface StudioAppOptions {
   createGame: (options: { scenes?: Map<string, Scene>; start?: string }) => Game;
   textureSources?: TextureSources;
@@ -229,6 +243,15 @@ export async function startStudioApp(options: StudioAppOptions): Promise<StudioA
     clear(hierarchy.body);
     const entities = session.scene.world.entities();
     hierarchy.setStatus(`${entities.length} entities`);
+    // Without this a scene could only be edited, never grown: the first thing a new project
+    // needs is a way to put an entity in it.
+    hierarchy.body.append(el("div", { className: "scene-actions" }, [
+      select("add entity…", ADD_ENTITY_TEMPLATES, (template) => {
+        if (template === "add entity…") return;
+        const created = session.createEntity(template);
+        log(`added ${template} #${created} to ${session.sceneName}`);
+      }),
+    ]));
     for (const entity of entities) {
       const label = session.scene.labelOf(entity);
       const components = session.scene.world.componentsOf(entity);

@@ -13,7 +13,7 @@
  *    browser and stubs headlessly, which keeps tests deterministic.
  */
 
-import type { Context2D, TextureLike } from "@ember/render2d";
+import { createRasterSurface, type Context2D, type TextureLike } from "@ember/render2d";
 
 export const ASSET_MANIFEST_FORMAT = "emberassets";
 export const ASSET_MANIFEST_VERSION = 1;
@@ -379,6 +379,26 @@ export function solidTexture(
         ctx.lineWidth = 2;
         ctx.strokeRect(1, 1, size.width - 2, size.height - 2);
       }
+    },
+  };
+}
+
+/**
+ * A canvas factory that rasterises in software: real pixels, no DOM, no FFI. The native
+ * editor builds example textures with it, so its viewport draws the artwork the game ships
+ * instead of placeholder boxes.
+ */
+export function createSoftwareCanvasFactory(): CanvasFactory {
+  return {
+    name: "software",
+    create(width, height): TextureCanvas {
+      const surface = createRasterSurface(width, height);
+      return {
+        ctx: surface.ctx,
+        image: surface.image,
+        width: surface.image.width,
+        height: surface.image.height,
+      };
     },
   };
 }

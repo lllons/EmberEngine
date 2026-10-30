@@ -8,29 +8,29 @@ import {
   Diagnostics,
   Lifetime,
   Name,
+  rect,
   RigidBody,
   Scene,
   Script,
   Sprite as SpriteComponent,
   Tag,
   Transform,
+  vec2,
   Velocity,
   World,
-  rect,
-  vec2,
 } from "@ember/core";
 import {
-  type CollisionRecord,
-  RuntimeSession,
-  ScriptRegistry,
   animationSystem,
   cameraSystem,
+  type CollisionRecord,
   collisionSystem,
   defaultSystems,
   defineSystem,
   gravitySystem,
   lifetimeSystem,
   randomPointInRect,
+  RuntimeSession,
+  ScriptRegistry,
   scriptSystem,
   separationAxis,
   sortSystems,
@@ -295,7 +295,10 @@ Deno.test("a falling body lands on the ground and stops", () => {
   const transform = scene.world.require(mover, Transform);
   const velocity = scene.world.require(mover, Velocity);
   const groundTop = scene.world.require(ground, Transform).position.y - 10;
-  assert(transform.position.y < groundTop + 12, `body sank into the ground: ${transform.position.y}`);
+  assert(
+    transform.position.y < groundTop + 12,
+    `body sank into the ground: ${transform.position.y}`,
+  );
   assert(Math.abs(velocity.y) < 60, `body never settled: vy=${velocity.y}`);
 });
 
@@ -721,7 +724,10 @@ Deno.test("scripts can read input, RNG and services from the context", () => {
 
 Deno.test("script update receives a positive dt", () => {
   let observedDt = 0;
-  const registry = new ScriptRegistry().define("dt", () => ({ update: (ctx) => observedDt = ctx.dt }));
+  const registry = new ScriptRegistry().define(
+    "dt",
+    () => ({ update: (ctx) => observedDt = ctx.dt }),
+  );
   const scene = new Scene();
   const entity = scene.createEntity();
   scene.world.add(entity, Script, { name: "dt" });
@@ -764,7 +770,11 @@ Deno.test("unknown scripts warn once per entity and do not throw", () => {
   const scene = new Scene();
   const entity = scene.createEntity();
   scene.world.add(entity, Script, { name: "missing" });
-  const session = new RuntimeSession({ scene, systems: [scriptSystem({ registry: new ScriptRegistry() })], diagnostics });
+  const session = new RuntimeSession({
+    scene,
+    systems: [scriptSystem({ registry: new ScriptRegistry() })],
+    diagnostics,
+  });
   session.step(DT);
   session.step(DT);
   assert(diagnostics.count("warn") >= 1);
@@ -777,7 +787,9 @@ Deno.test("script onMissing handler can take over reporting", () => {
   scene.world.add(entity, Script, { name: "ghost" });
   const session = new RuntimeSession({
     scene,
-    systems: [scriptSystem({ registry: new ScriptRegistry(), onMissing: (_e, name) => missing.push(name) })],
+    systems: [
+      scriptSystem({ registry: new ScriptRegistry(), onMissing: (_e, name) => missing.push(name) }),
+    ],
   });
   session.step(DT);
   assertEquals(missing, ["ghost"]);
@@ -920,7 +932,15 @@ Deno.test("a script can spawn and despawn through the api", () => {
 
 Deno.test("defaultSystems includes every built-in in phase order", () => {
   const names = defaultSystems({ scripts: new ScriptRegistry() }).map((system) => system.name);
-  assertEquals(names, ["animation", "scripts", "gravity", "velocity", "collision", "camera", "lifetime"]);
+  assertEquals(names, [
+    "animation",
+    "scripts",
+    "gravity",
+    "velocity",
+    "collision",
+    "camera",
+    "lifetime",
+  ]);
 });
 
 Deno.test("defaultSystems can disable individual systems", () => {
@@ -967,7 +987,11 @@ Deno.test("a later phase can read what an earlier phase wrote", () => {
     scene,
     systems: [
       gravitySystem(),
-      defineSystem("observer", (ctx) => observed.push(ctx.scene.world.require(entity, Velocity).y), 300),
+      defineSystem(
+        "observer",
+        (ctx) => observed.push(ctx.scene.world.require(entity, Velocity).y),
+        300,
+      ),
     ],
   });
   session.step(DT);

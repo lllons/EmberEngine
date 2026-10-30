@@ -16,8 +16,8 @@ import {
   Tag,
   TextLabel,
   Theme,
-  Velocity,
   vec2,
+  Velocity,
 } from "@ember/core";
 import { BIRD_SCRIPT, TITLE_SCRIPT } from "./scripts.ts";
 import { PIPE_WIDTH } from "./names.ts";
@@ -113,7 +113,12 @@ export function createPipePair(
   world.add(zone, RigidBody, { type: "kinematic", gravityScale: 0, maxSpeed: 600, friction: 0 });
   world.add(zone, Velocity, { x: -speed, y: 0, angular: 0 });
   // A score zone: reports the pass, never blocks it.
-  world.add(zone, BoxCollider, { width: 6, height: Math.max(16, gap - 16), solid: false, trigger: true });
+  world.add(zone, BoxCollider, {
+    width: 6,
+    height: Math.max(16, gap - 16),
+    solid: false,
+    trigger: true,
+  });
   world.add(zone, Tag, { value: SCORE_TAG });
 
   return { top, bottom, zone };

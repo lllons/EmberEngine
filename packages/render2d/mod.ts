@@ -10,4 +10,5 @@
 export * from "./commands.ts";
 export * from "./build.ts";
 export * from "./camera2d.ts";
+export * from "./raster.ts";
 export * from "./backends/canvas2d.ts";

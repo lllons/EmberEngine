@@ -1,9 +1,9 @@
 /**
  * `EmberEngine.exe` — the standalone native editor.
  *
- * A fresh launch opens an empty project. Examples (scripting playground, 3D showcase and
- * Ember Runner) are available from the Examples menu; authored scenes are written under
- * `projects/untitled/scenes`. No browser, server or webview is involved.
+ * A fresh launch opens an empty project. Examples (scripting playground, 3D showcase,
+ * Ember Runner and Flappy Ember) are available from the Examples menu; authored scenes are
+ * written under `projects/untitled/scenes`. No browser, server or webview is involved.
  *
  * Usage:
  *   EmberEngine.exe                         open the empty project
@@ -14,7 +14,7 @@
 
 import { dirname, isAbsolute, join } from "node:path";
 import { listGameSceneFiles, loadGame } from "@ember/gameloader";
-import { EDITOR_EXAMPLES, createEmptyGame } from "./examples.ts";
+import { EDITOR_EXAMPLES, EMPTY_PROJECT_FACTORY, createEmptyGame } from "./examples.ts";
 import { runNativeEditor } from "./native/app.ts";
 
 interface LaunchArgs {
@@ -85,6 +85,10 @@ async function launch(argv: readonly string[]): Promise<void> {
       examples: EDITOR_EXAMPLES,
       title: loaded.descriptor.title,
       savedScenes: files.map((file) => file.name),
+      // The opened folder exports through its own module; the editor never rewrites it.
+      workspaceRoot: Deno.cwd(),
+      gameModulePath: loaded.descriptor.entryPath,
+      factory: EMPTY_PROJECT_FACTORY,
     });
     return;
   }
@@ -98,6 +102,8 @@ async function launch(argv: readonly string[]): Promise<void> {
     examplesRoot: join(projectDirectory, "examples"),
     examples: EDITOR_EXAMPLES,
     title: "Untitled Project",
+    workspaceRoot: projectDirectory,
+    factory: EMPTY_PROJECT_FACTORY,
   });
 }
 

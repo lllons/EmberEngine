@@ -158,6 +158,232 @@
           "angular": 0
         }
       }
+    },
+    {
+      "id": 3,
+      "components": {
+        "BoxCollider": {
+          "width": 18,
+          "height": 18,
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "solid": true,
+          "trigger": true,
+          "enabled": true
+        },
+        "Name": {
+          "value": "ember"
+        },
+        "Script": {
+          "name": "runner.pickup",
+          "props": {
+            "points": 25
+          },
+          "source": ""
+        },
+        "Sprite": {
+          "texture": "coin",
+          "width": 18,
+          "height": 18,
+          "tint": "#f5f5f5",
+          "alpha": 1,
+          "layer": 0,
+          "flipX": false,
+          "rotation": 0,
+          "frameCount": 4,
+          "framesPerSecond": 8,
+          "frame": 0
+        },
+        "Tag": {
+          "value": "coin"
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 270
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "components": {
+        "BoxCollider": {
+          "width": 18,
+          "height": 18,
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "solid": true,
+          "trigger": true,
+          "enabled": true
+        },
+        "Name": {
+          "value": "ember"
+        },
+        "Script": {
+          "name": "runner.pickup",
+          "props": {
+            "points": 25
+          },
+          "source": ""
+        },
+        "Sprite": {
+          "texture": "coin",
+          "width": 18,
+          "height": 18,
+          "tint": "#f5f5f5",
+          "alpha": 1,
+          "layer": 0,
+          "flipX": false,
+          "rotation": 0,
+          "frameCount": 4,
+          "framesPerSecond": 8,
+          "frame": 0
+        },
+        "Tag": {
+          "value": "coin"
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 270
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "components": {
+        "BoxCollider": {
+          "width": 24,
+          "height": 24,
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "solid": true,
+          "trigger": true,
+          "enabled": true
+        },
+        "Name": {
+          "value": "hazard"
+        },
+        "RigidBody": {
+          "type": "kinematic",
+          "gravityScale": 0,
+          "friction": 0.2,
+          "maxSpeed": 1200,
+          "restitution": 0,
+          "grounded": false
+        },
+        "Script": {
+          "name": "runner.hazard",
+          "props": {
+            "patrol": 80,
+            "speed": 80
+          },
+          "source": ""
+        },
+        "Sprite": {
+          "texture": "hazard",
+          "width": 26,
+          "height": 26,
+          "tint": "#f5f5f5",
+          "alpha": 1,
+          "layer": 0,
+          "flipX": false,
+          "rotation": 0,
+          "frameCount": 1,
+          "framesPerSecond": 8,
+          "frame": 0
+        },
+        "Tag": {
+          "value": "hazard"
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 270
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        },
+        "Velocity": {
+          "x": 0,
+          "y": 0,
+          "angular": 0
+        }
+      }
+    },
+    {
+      "id": 6,
+      "components": {
+        "BoxCollider": {
+          "width": 48,
+          "height": 96,
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "solid": true,
+          "trigger": true,
+          "enabled": true
+        },
+        "Name": {
+          "value": "gate"
+        },
+        "Script": {
+          "name": "runner.goal",
+          "props": {
+            "bonus": 150
+          },
+          "source": ""
+        },
+        "Sprite": {
+          "texture": "goal",
+          "width": 48,
+          "height": 96,
+          "tint": "#f5f5f5",
+          "alpha": 1,
+          "layer": 0,
+          "flipX": false,
+          "rotation": 0,
+          "frameCount": 1,
+          "framesPerSecond": 8,
+          "frame": 0
+        },
+        "Tag": {
+          "value": "goal"
+        },
+        "Transform": {
+          "position": {
+            "x": 480,
+            "y": 270
+          },
+          "rotation": 0,
+          "scale": {
+            "x": 1,
+            "y": 1
+          }
+        }
+      }
     }
   ],
   "metadata": {

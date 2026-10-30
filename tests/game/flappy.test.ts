@@ -17,8 +17,8 @@ import {
   Sprite,
   TextLabel,
   Transform,
-  Velocity,
   vec2,
+  Velocity,
 } from "@ember/core";
 import { type RuntimeSession, worldDigest } from "@ember/runtime";
 import {
@@ -219,7 +219,12 @@ Deno.test("game/flappy the gap trigger is non-solid and reports the pass", () =>
   assertEqual(collider.solid, false, "the zone does not block the bird");
   const state = stateOf(runtime);
   const bird = birdOf(runtime);
-  teleport(runtime, bird, transformOf(runtime, zone).position.x, transformOf(runtime, zone).position.y);
+  teleport(
+    runtime,
+    bird,
+    transformOf(runtime, zone).position.x,
+    transformOf(runtime, zone).position.y,
+  );
   runtime.step(DT);
   assertEqual(state.score, 1, "crossing the gap scores");
   assertEqual(stateOf(runtime).best, 1, "best follows the score");
@@ -237,7 +242,12 @@ Deno.test("game/flappy a pipe is scored exactly once", () => {
   runtime.step(DT);
   assertEqual(state.score, 1, "first crossing scores");
   for (let frame = 0; frame < 30; frame++) {
-    teleport(runtime, bird, transformOf(runtime, zone).position.x, transformOf(runtime, zone).position.y);
+    teleport(
+      runtime,
+      bird,
+      transformOf(runtime, zone).position.x,
+      transformOf(runtime, zone).position.y,
+    );
     runtime.step(DT);
   }
   assertEqual(state.score, 1, "staying in the gap does not farm points");
@@ -255,7 +265,12 @@ Deno.test("game/flappy hitting a pipe ends the run and freezes the world", () =>
   const state = stateOf(runtime);
   const bird = birdOf(runtime);
   const [pipe] = runtime.api.entitiesWithTag(PIPE_TAG);
-  teleport(runtime, bird, transformOf(runtime, pipe).position.x, transformOf(runtime, pipe).position.y);
+  teleport(
+    runtime,
+    bird,
+    transformOf(runtime, pipe).position.x,
+    transformOf(runtime, pipe).position.y,
+  );
   runtime.step(DT);
 
   assertEqual(state.status, "dead", "pipe contact kills");
@@ -292,16 +307,32 @@ Deno.test("game/flappy the game-over card reports the score and best", () => {
   runtime.run(90, DT);
   const bird = birdOf(runtime);
   const zone = zoneAhead(runtime)!;
-  teleport(runtime, bird, transformOf(runtime, zone).position.x, transformOf(runtime, zone).position.y);
+  teleport(
+    runtime,
+    bird,
+    transformOf(runtime, zone).position.x,
+    transformOf(runtime, zone).position.y,
+  );
   runtime.step(DT); // score one
   const state = stateOf(runtime);
   const [pipe] = runtime.api.entitiesWithTag(PIPE_TAG);
-  teleport(runtime, bird, transformOf(runtime, pipe).position.x, transformOf(runtime, pipe).position.y);
+  teleport(
+    runtime,
+    bird,
+    transformOf(runtime, pipe).position.x,
+    transformOf(runtime, pipe).position.y,
+  );
   runtime.step(DT);
 
   const overlay = runtime.scene.world.require(runtime.scene.findByName("overlay")!, TextLabel);
-  const detail = runtime.scene.world.require(runtime.scene.findByName("overlay-detail")!, TextLabel);
-  const prompt = runtime.scene.world.require(runtime.scene.findByName("overlay-prompt")!, TextLabel);
+  const detail = runtime.scene.world.require(
+    runtime.scene.findByName("overlay-detail")!,
+    TextLabel,
+  );
+  const prompt = runtime.scene.world.require(
+    runtime.scene.findByName("overlay-prompt")!,
+    TextLabel,
+  );
   assertEqual(overlay.text, "GAME OVER", "overlay title");
   assertEqual(overlay.alpha, 1, "overlay is visible");
   assert(detail.text.includes(`score ${state.score}`), `detail: ${detail.text}`);

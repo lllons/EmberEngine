@@ -19,15 +19,14 @@ import {
 import { buildScenes } from "./scenes.ts";
 import { createFlappyScripts } from "./scripts.ts";
 import { flappySystems } from "./systems.ts";
-import { createRunState, GOTO_SCENE, RESTART, resetRun, RUN_STATE, runState } from "./state.ts";
-import { textureSources } from "./textures.ts";
+import { createRunState, GOTO_SCENE, resetRun, RESTART, RUN_STATE, runState } from "./state.ts";
 
-export { GAME_ID, GAME_TITLE, GAME_VERSION, START_SCENE, TITLE_SCENE, PLAY_SCENE };
+export { GAME_ID, GAME_TITLE, GAME_VERSION, PLAY_SCENE, START_SCENE, TITLE_SCENE };
 export { buildScenes, sceneNames } from "./scenes.ts";
-export { textureSources, textureNames } from "./textures.ts";
-export { RUN_STATE, GOTO_SCENE, RESTART, createRunState, resetRun, runState } from "./state.ts";
+export { textureNames, textureSources } from "./textures.ts";
+export { createRunState, GOTO_SCENE, resetRun, RESTART, RUN_STATE, runState } from "./state.ts";
 export type { FlappyState, FlapStatus } from "./state.ts";
-export { createFlappyScripts, BIRD_SCRIPT, TITLE_SCRIPT } from "./scripts.ts";
+export { BIRD_SCRIPT, createFlappyScripts, TITLE_SCRIPT } from "./scripts.ts";
 export {
   cleanupSystem,
   collisionDeathSystem,
@@ -113,7 +112,10 @@ export function createGame(options: CreateGameOptions = {}): Game {
 
       session.events.on("flappy.dead", (payload) => {
         const details = payload as { score?: number; reason?: string };
-        session.diagnostics.info("run ended", { score: details.score ?? 0, reason: details.reason ?? "" });
+        session.diagnostics.info("run ended", {
+          score: details.score ?? 0,
+          reason: details.reason ?? "",
+        });
       });
       session.events.on("flappy.point", (payload) => {
         const details = payload as { score?: number };

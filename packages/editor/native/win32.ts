@@ -92,8 +92,7 @@ function signedWord(value: number): number {
   return word > 0x7fff ? word - 0x10000 : word;
 }
 
-export class Win32Window {
-  readonly user32 = Deno.dlopen("user32.dll", {
+export class Win32Window {  readonly user32 = Deno.dlopen("user32.dll", {
     RegisterClassExW: { parameters: ["pointer"], result: "u16" },
     CreateWindowExW: {
       parameters: [
@@ -137,6 +136,10 @@ export class Win32Window {
   readonly gdi32 = Deno.dlopen("gdi32.dll", {
     CreateCompatibleDC: { parameters: ["pointer"], result: "pointer" },
     CreateCompatibleBitmap: { parameters: ["pointer", "i32", "i32"], result: "pointer" },
+    CreateDIBSection: {
+      parameters: ["pointer", "pointer", "u32", "pointer", "pointer", "u32"],
+      result: "pointer",
+    },
     DeleteDC: { parameters: ["pointer"], result: "i32" },
     SelectObject: { parameters: ["pointer", "pointer"], result: "pointer" },
     DeleteObject: { parameters: ["pointer"], result: "i32" },
@@ -178,6 +181,27 @@ export class Win32Window {
     SaveDC: { parameters: ["pointer"], result: "i32" },
     RestoreDC: { parameters: ["pointer", "i32"], result: "i32" },
     IntersectClipRect: { parameters: ["pointer", "i32", "i32", "i32", "i32"], result: "i32" },
+  });
+
+  /** Per-pixel alpha for textures: `AlphaBlend` lives in msimg32, not gdi32. */
+  readonly msimg32 = Deno.dlopen("msimg32.dll", {
+    // BLENDFUNCTION is four bytes and is passed by value as a single 32-bit word.
+    AlphaBlend: {
+      parameters: [
+        "pointer",
+        "i32",
+        "i32",
+        "i32",
+        "i32",
+        "pointer",
+        "i32",
+        "i32",
+        "i32",
+        "i32",
+        "u32",
+      ],
+      result: "i32",
+    },
   });
 
   readonly kernel32 = Deno.dlopen("kernel32.dll", {
@@ -327,6 +351,7 @@ export class Win32Window {
     this.wndProc.close();
     this.user32.close();
     this.gdi32.close();
+    this.msimg32.close();
     this.kernel32.close();
   }
 
@@ -393,7 +418,7 @@ export class Win32Window {
     const memory = this.gdi32.symbols.CreateCompatibleDC(hdc);
     const bitmap = this.gdi32.symbols.CreateCompatibleBitmap(hdc, size.width, size.height);
     const previous = this.gdi32.symbols.SelectObject(memory, bitmap);
-    const canvas = new GdiCanvas(this.gdi32, memory);
+    const canvas = new GdiCanvas(this.gdi32, memory, this.msimg32);
     try {
       this.options.onPaint(canvas, size.width, size.height);
       if (this.paintError) {

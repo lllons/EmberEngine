@@ -2,7 +2,7 @@
  * @ember/render2d/build — scene to draw commands, the heart of the 2D pipeline.
  */
 
-import { assert, assertEquals, assertAlmostEquals } from "@std/assert";
+import { assert, assertAlmostEquals, assertEquals } from "@std/assert";
 import {
   BoxCollider,
   CircleShape,
@@ -12,10 +12,10 @@ import {
   Scene,
   Sprite,
   TextLabel,
-  Visibility,
   Transform,
-  World,
   vec2,
+  Visibility,
+  World,
 } from "@ember/core";
 import {
   buildDrawList,
@@ -69,7 +69,9 @@ Deno.test("buildDrawList scales shapes by the camera zoom", () => {
   scene.resources.camera.zoom = 2;
   const entity = scene.createEntity({ position: vec2(400, 300) });
   scene.world.add(entity, RectShape, { width: 40, height: 20 });
-  const rect = buildDrawList(scene).commands.find((command) => command.kind === "rect") as RectCommand;
+  const rect = buildDrawList(scene).commands.find((command) =>
+    command.kind === "rect"
+  ) as RectCommand;
   assertEquals([rect.w, rect.h], [80, 40]);
 });
 
@@ -77,7 +79,9 @@ Deno.test("buildDrawList applies the entity's own scale", () => {
   const scene = sceneWithCamera();
   const entity = scene.createEntity({ position: vec2(400, 300), scale: vec2(3, 0.5) });
   scene.world.add(entity, RectShape, { width: 10, height: 10 });
-  const rect = buildDrawList(scene).commands.find((command) => command.kind === "rect") as RectCommand;
+  const rect = buildDrawList(scene).commands.find((command) =>
+    command.kind === "rect"
+  ) as RectCommand;
   assertEquals([rect.w, rect.h], [30, 5]);
   assertEquals(scene.world.require(entity, RectShape).width, 10, "the scene must not be mutated");
 });
@@ -237,7 +241,9 @@ Deno.test("sprite commands carry texture, uv, tint and flip", () => {
     frameCount: 4,
     frame: 2,
   });
-  const sprite = buildDrawList(scene).commands.find((command) => command.kind === "sprite") as SpriteCommand;
+  const sprite = buildDrawList(scene).commands.find((command) =>
+    command.kind === "sprite"
+  ) as SpriteCommand;
   assertEquals(sprite.texture, "coin");
   assertEquals(sprite.tint, "#ff0000");
   assertEquals(sprite.flipX, true);
@@ -251,7 +257,9 @@ Deno.test("sprite rotation tilts the image without growing the collider", () => 
   scene.world.add(entity, Sprite, { texture: "coin", width: 28, height: 22, rotation: 0.5 });
   scene.world.add(entity, BoxCollider, { width: 28, height: 22 });
 
-  const sprite = buildDrawList(scene).commands.find((command) => command.kind === "sprite") as SpriteCommand;
+  const sprite = buildDrawList(scene).commands.find((command) =>
+    command.kind === "sprite"
+  ) as SpriteCommand;
   assertAlmostEquals(sprite.rotation, 0.5, 1e-9);
 
   // The collider still follows the transform only, so the banked image does not clip.
@@ -265,7 +273,9 @@ Deno.test("sprite frames wrap around instead of falling off the strip", () => {
   const scene = sceneWithCamera();
   const entity = scene.createEntity({ position: vec2(400, 300) });
   scene.world.add(entity, Sprite, { texture: "coin", frameCount: 4, frame: 6 });
-  const sprite = buildDrawList(scene).commands.find((command) => command.kind === "sprite") as SpriteCommand;
+  const sprite = buildDrawList(scene).commands.find((command) =>
+    command.kind === "sprite"
+  ) as SpriteCommand;
   assertAlmostEquals(sprite.uv.u0, 0.5, 1e-9);
 });
 
@@ -273,7 +283,9 @@ Deno.test("a single-frame sprite uses the whole texture", () => {
   const scene = sceneWithCamera();
   const entity = scene.createEntity({ position: vec2(400, 300) });
   scene.world.add(entity, Sprite, { texture: "player" });
-  const sprite = buildDrawList(scene).commands.find((command) => command.kind === "sprite") as SpriteCommand;
+  const sprite = buildDrawList(scene).commands.find((command) =>
+    command.kind === "sprite"
+  ) as SpriteCommand;
   assertEquals(sprite.uv, { u0: 0, v0: 0, u1: 1, v1: 1 });
 });
 
@@ -282,7 +294,9 @@ Deno.test("text commands scale their font size with zoom", () => {
   scene.resources.camera.zoom = 1.5;
   const entity = scene.createEntity({ position: vec2(400, 300) });
   scene.world.add(entity, TextLabel, { text: "score", size: 20 });
-  const text = buildDrawList(scene).commands.find((command) => command.kind === "text") as TextCommand;
+  const text = buildDrawList(scene).commands.find((command) =>
+    command.kind === "text"
+  ) as TextCommand;
   assertEquals(text.size, 30);
 });
 
@@ -290,7 +304,9 @@ Deno.test("text commands preserve alignment and baseline", () => {
   const scene = sceneWithCamera();
   const entity = scene.createEntity({ position: vec2(400, 300) });
   scene.world.add(entity, TextLabel, { text: "hi", align: "right", baseline: "bottom" });
-  const text = buildDrawList(scene).commands.find((command) => command.kind === "text") as TextCommand;
+  const text = buildDrawList(scene).commands.find((command) =>
+    command.kind === "text"
+  ) as TextCommand;
   assertEquals([text.align, text.baseline], ["right", "bottom"]);
 });
 
@@ -326,7 +342,10 @@ Deno.test("buildEntityCommands uses the supplied camera and viewport", () => {
   const scene = sceneWithCamera();
   const entity = scene.createEntity({ position: vec2(0, 0) });
   scene.world.add(entity, RectShape, { width: 10, height: 10 });
-  const commands = buildEntityCommands(scene, entity, { ...scene.resources.camera, position: vec2(0, 0) }, viewport);
+  const commands = buildEntityCommands(scene, entity, {
+    ...scene.resources.camera,
+    position: vec2(0, 0),
+  }, viewport);
   assertEquals(commands.length, 1);
   assertEquals((commands[0] as RectCommand).x, 400);
 });

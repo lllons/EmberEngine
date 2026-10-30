@@ -69,7 +69,10 @@ export function validateRequest(value: unknown): JsonRpcRequest {
   if (typeof raw.method !== "string" || raw.method.length === 0) {
     throw new RpcProtocolError(RpcError.invalidRequest, "method must be a non-empty string");
   }
-  if (raw.id !== undefined && raw.id !== null && typeof raw.id !== "string" && typeof raw.id !== "number") {
+  if (
+    raw.id !== undefined && raw.id !== null && typeof raw.id !== "string" &&
+    typeof raw.id !== "number"
+  ) {
     throw new RpcProtocolError(RpcError.invalidRequest, "id must be a string, number or null");
   }
   return {
@@ -144,7 +147,11 @@ export class LineTransport {
 /** Wraps a handler error as a JSON-RPC failure, keeping the original message. */
 export function failure(id: JsonRpcId, error: unknown): JsonRpcFailure {
   if (error instanceof RpcProtocolError) {
-    return { jsonrpc: "2.0", id, error: { code: error.code, message: error.message, data: error.data } };
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: { code: error.code, message: error.message, data: error.data },
+    };
   }
   return {
     jsonrpc: "2.0",

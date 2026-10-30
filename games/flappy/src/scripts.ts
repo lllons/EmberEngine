@@ -8,12 +8,12 @@
 
 import { clamp, RigidBody, Sprite, Transform, Velocity } from "@ember/core";
 import {
+  numberProp,
   type ScriptRegistry,
   ScriptRegistry as Registry,
-  numberProp,
   stringProp,
 } from "@ember/runtime";
-import { GOTO_SCENE, RUN_STATE, type FlappyState } from "./state.ts";
+import { type FlappyState, GOTO_SCENE, RUN_STATE } from "./state.ts";
 
 export const BIRD_SCRIPT = "flappy.bird";
 export const TITLE_SCRIPT = "flappy.title";
